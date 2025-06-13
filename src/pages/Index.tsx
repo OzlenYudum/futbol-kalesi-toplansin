@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Star, MapPin, Clock, Users, Shield, Zap, Trophy, Download, X, Smartphone, Apple, Play, ChevronRight, TrendingUp } from 'lucide-react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -11,10 +9,14 @@ import FieldCard from '@/components/FieldCard';
 import LoginModal from '@/components/LoginModal';
 import RegisterModal from '@/components/RegisterModal';
 
-const Index = () => {
+interface IndexProps {
+  user: any;
+  setUser: (user: any) => void;
+}
+
+const Index = ({ user, setUser }: IndexProps) => {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
-  const [user, setUser] = useState(null);
   const [showAppBanner, setShowAppBanner] = useState(true);
 
   useEffect(() => {
@@ -76,14 +78,6 @@ const Index = () => {
     }
   ];
 
-  const reviewStats = [
-    { rating: 5, count: 2847, percentage: 68 },
-    { rating: 4, count: 923, percentage: 22 },
-    { rating: 3, count: 284, percentage: 7 },
-    { rating: 2, count: 93, percentage: 2 },
-    { rating: 1, count: 42, percentage: 1 }
-  ];
-
   const stats = [
     { value: "500+", label: "Aktif Halı Saha", icon: <MapPin className="h-6 w-6" /> },
     { value: "10K+", label: "Mutlu Kullanıcı", icon: <Users className="h-6 w-6" /> },
@@ -100,44 +94,67 @@ const Index = () => {
         onLogout={() => setUser(null)}
       />
       
-      {/* Mobile App Banner */}
+      {/* Enhanced Mobile App Banner */}
       {showAppBanner && (
-        <div className="bg-gradient-to-r from-green-600 to-emerald-600 text-white relative overflow-hidden">
-          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Smartphone className="h-6 w-6" />
+        <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-black opacity-10"></div>
+          <div className="absolute -top-6 -right-6 w-24 h-24 bg-white opacity-10 rounded-full"></div>
+          <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-white opacity-10 rounded-full"></div>
+          
+          <div className="relative max-w-6xl mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm border border-white/30">
+                  <Smartphone className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-1">📱 Toplansın Mobil Uygulaması</h3>
+                  <p className="text-sm opacity-90">Daha hızlı rezervasyon, özel fırsatlar ve kolay saha bulma!</p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold">Toplansın Mobil Uygulaması</p>
-                <p className="text-sm opacity-90">Daha hızlı rezervasyon için indirin</p>
+              
+              <div className="flex items-center space-x-4">
+                <div className="hidden md:flex items-center space-x-3">
+                  <Button 
+                    size="sm" 
+                    className="bg-black hover:bg-gray-900 text-white h-12 px-4 rounded-xl font-medium transition-all hover:scale-105"
+                  >
+                    <Apple className="h-5 w-5 mr-2" />
+                    <div className="text-left">
+                      <div className="text-xs opacity-80">Download on the</div>
+                      <div className="text-sm font-semibold">App Store</div>
+                    </div>
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="bg-black hover:bg-gray-900 text-white h-12 px-4 rounded-xl font-medium transition-all hover:scale-105"
+                  >
+                    <Play className="h-5 w-5 mr-2" />
+                    <div className="text-left">
+                      <div className="text-xs opacity-80">Get it on</div>
+                      <div className="text-sm font-semibold">Google Play</div>
+                    </div>
+                  </Button>
+                </div>
+                
+                <div className="md:hidden flex space-x-2">
+                  <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30 rounded-xl">
+                    <Apple className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" className="bg-white/20 hover:bg-white/30 text-white border-white/30 rounded-xl">
+                    <Play className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => setShowAppBanner(false)}
+                  className="text-white hover:bg-white/20 rounded-full p-2"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button 
-                size="sm" 
-                variant="secondary"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-              >
-                <Apple className="h-4 w-4 mr-2" />
-                iOS
-              </Button>
-              <Button 
-                size="sm" 
-                variant="secondary"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                Android
-              </Button>
-              <Button 
-                size="sm" 
-                variant="ghost"
-                onClick={() => setShowAppBanner(false)}
-                className="text-white hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         </div>
@@ -196,7 +213,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Customer Reviews Section with Graphics */}
+      {/* Simple Customer Reviews Section */}
       <section className="py-20 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -208,79 +225,61 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Review Stats */}
-            <div className="space-y-6">
-              <div className="text-center">
-                <div className="text-5xl font-bold text-green-600 mb-2">4.8</div>
-                <div className="flex justify-center mb-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="h-6 w-6 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-600">4,189 değerlendirme</p>
-              </div>
-              
-              <div className="space-y-3">
-                {reviewStats.map((stat) => (
-                  <div key={stat.rating} className="flex items-center space-x-3">
-                    <span className="w-8 text-sm font-medium">{stat.rating}</span>
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <div className="flex-1">
-                      <Progress value={stat.percentage} className="h-2" />
-                    </div>
-                    <span className="w-12 text-sm text-gray-600">{stat.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Sample Reviews */}
-            <div className="space-y-4">
-              {[
-                {
-                  name: "Ahmet K.",
-                  rating: 5,
-                  comment: "Harika bir platform! Sahayı çok kolay rezerve ettim.",
-                  date: "2 gün önce"
-                },
-                {
-                  name: "Mehmet S.",
-                  rating: 4,
-                  comment: "Kaliteli sahalar ve uygun fiyatlar. Tavsiye ederim.",
-                  date: "1 hafta önce"
-                },
-                {
-                  name: "Zeynep A.",
-                  rating: 5,
-                  comment: "Müşteri hizmetleri çok iyi. Sorunumu hemen çözdüler.",
-                  date: "2 hafta önce"
-                }
-              ].map((review, index) => (
-                <Card key={index} className="p-4 hover:shadow-md transition-shadow">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {review.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold">{review.name}</h4>
-                        <span className="text-sm text-gray-500">{review.date}</span>
-                      </div>
-                      <div className="flex items-center mb-2">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star} 
-                            className={`h-4 w-4 ${star <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-                          />
-                        ))}
-                      </div>
-                      <p className="text-gray-700 text-sm">{review.comment}</p>
-                    </div>
-                  </div>
-                </Card>
+          <div className="text-center mb-12">
+            <div className="text-5xl font-bold text-green-600 mb-2">4.8</div>
+            <div className="flex justify-center mb-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} className="h-6 w-6 text-yellow-400 fill-current" />
               ))}
             </div>
+            <p className="text-gray-600">4,189 değerlendirme</p>
+          </div>
+
+          {/* Sample Reviews */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Ahmet K.",
+                rating: 5,
+                comment: "Harika bir platform! Sahayı çok kolay rezerve ettim. Kaliteli sahalar ve uygun fiyatlar.",
+                date: "2 gün önce"
+              },
+              {
+                name: "Mehmet S.",
+                rating: 4,
+                comment: "Kullanımı çok kolay. Uygulama sayesinde son dakika rezervasyon yapabildim.",
+                date: "1 hafta önce"
+              },
+              {
+                name: "Zeynep A.",
+                rating: 5,
+                comment: "Müşteri hizmetleri çok iyi. Sorunumu hemen çözdüler. Kesinlikle tavsiye ederim.",
+                date: "2 hafta önce"
+              }
+            ].map((review, index) => (
+              <Card key={index} className="p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {review.name.charAt(0)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold">{review.name}</h4>
+                      <span className="text-sm text-gray-500">{review.date}</span>
+                    </div>
+                    <div className="flex items-center mb-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star 
+                          key={star} 
+                          className={`h-4 w-4 ${star <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                        />
+                      ))}
+                    </div>
+                    <p className="text-gray-700 text-sm">{review.comment}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </section>

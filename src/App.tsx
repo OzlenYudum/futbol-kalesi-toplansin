@@ -25,12 +25,12 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Index user={user} setUser={setUser} />} />
             <Route path="/fields" element={<Fields />} />
             <Route path="/field/:id" element={<FieldDetail />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            {user && <Route path="/profile" element={<Profile user={user} onLogout={() => setUser(null)} />} />}
+            <Route path="/profile" element={user ? <Profile user={user} onLogout={() => setUser(null)} /> : <NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
