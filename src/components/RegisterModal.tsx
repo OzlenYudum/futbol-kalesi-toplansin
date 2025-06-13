@@ -1,0 +1,185 @@
+
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Eye, EyeOff } from 'lucide-react';
+
+interface RegisterModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSwitchToLogin: () => void;
+  onRegister: (user: any) => void;
+}
+
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: RegisterModalProps) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'user'
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      alert('Şifreler eşleşmiyor!');
+      return;
+    }
+    
+    setLoading(true);
+    
+    // Simulate registration process
+    setTimeout(() => {
+      const user = {
+        id: 1,
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        avatar: null
+      };
+      onRegister(user);
+      onClose();
+      setLoading(false);
+    }, 1000);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            Kayıt Ol
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Ad Soyad</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Adınız ve soyadınız"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              required
+              className="focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">E-posta</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="ornek@email.com"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              required
+              className="focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Hesap Türü</Label>
+            <RadioGroup 
+              value={formData.role} 
+              onValueChange={(value) => handleInputChange('role', value)}
+              className="flex space-x-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="user" id="user" className="text-green-600" />
+                <Label htmlFor="user" className="text-sm">Oyuncu</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="owner" id="owner" className="text-green-600" />
+                <Label htmlFor="owner" className="text-sm">Saha Sahibi</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Şifre</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="En az 6 karakter"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                required
+                minLength={6}
+                className="focus:ring-2 focus:ring-green-500 pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </Button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Şifrenizi tekrar girin"
+              value={formData.confirmPassword}
+              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+              required
+              className="focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          
+          <div className="flex items-center">
+            <input type="checkbox" required className="rounded border-gray-300" />
+            <span className="ml-2 text-sm text-gray-600">
+              <a href="#" className="text-green-600 hover:underline">Kullanım Şartları</a>'nı ve{' '}
+              <a href="#" className="text-green-600 hover:underline">Gizlilik Politikası</a>'nı kabul ediyorum
+            </span>
+          </div>
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+            disabled={loading}
+          >
+            {loading ? 'Kayıt oluşturuluyor...' : 'Kayıt Ol'}
+          </Button>
+        </form>
+        
+        <div className="text-center mt-4">
+          <span className="text-sm text-gray-600">
+            Zaten hesabın var mı?{' '}
+            <button 
+              onClick={onSwitchToLogin}
+              className="text-green-600 hover:underline font-medium"
+            >
+              Giriş Yap
+            </button>
+          </span>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default RegisterModal;
