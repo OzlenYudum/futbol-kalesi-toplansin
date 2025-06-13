@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,12 @@ interface FieldCardProps {
 }
 
 const FieldCard = ({ field }: FieldCardProps) => {
+  const navigate = useNavigate();
+
+  const handleReservationClick = () => {
+    navigate(`/field/${field.id}`);
+  };
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
       <div className="relative">
@@ -64,7 +71,10 @@ const FieldCard = ({ field }: FieldCardProps) => {
           )}
         </div>
         
-        <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white">
+        <Button 
+          onClick={handleReservationClick}
+          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+        >
           Rezervasyon Yap
         </Button>
       </CardContent>
