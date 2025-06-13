@@ -2,12 +2,15 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeroProps {
   onGetStarted: () => void;
 }
 
 const Hero = ({ onGetStarted }: HeroProps) => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative py-20 px-4 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-green-600/10"></div>
@@ -41,6 +44,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
             <Button 
               variant="outline" 
               size="lg"
+              onClick={() => navigate('/fields')}
               className="border-2 border-green-500 text-green-600 hover:bg-green-50 text-lg px-8 py-4 rounded-full"
             >
               Sahalar Keşfet
@@ -72,7 +76,10 @@ const Hero = ({ onGetStarted }: HeroProps) => {
                 </div>
               </div>
               <div>
-                <Button className="w-full h-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg">
+                <Button 
+                  onClick={() => navigate('/fields')}
+                  className="w-full h-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg"
+                >
                   <Search className="mr-2 h-5 w-5" />
                   Ara
                 </Button>
