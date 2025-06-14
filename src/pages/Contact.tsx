@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,8 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, HelpCircle, Star, CheckCircle, Heart, Users } from 'lucide-react';
 import Header from '@/components/Header';
 
-const Contact = () => {
-  const [user, setUser] = useState(null);
+interface ContactProps {
+  user: any;
+  setUser: (user: any) => void;
+}
+
+const Contact = ({ user, setUser }: ContactProps) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',

@@ -1,13 +1,16 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Target, Award, Heart, Shield, Clock, Star, Trophy } from 'lucide-react';
 import Header from '@/components/Header';
 
-const About = () => {
-  const [user, setUser] = useState(null);
+interface AboutProps {
+  user: any;
+  setUser: (user: any) => void;
+}
 
+const About = ({ user, setUser }: AboutProps) => {
   const stats = [
     { icon: <Users className="h-8 w-8" />, number: "10,000+", label: "Aktif Kullanıcı" },
     { icon: <Target className="h-8 w-8" />, number: "500+", label: "Halı Saha" },
