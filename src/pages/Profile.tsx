@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, MapPin, Clock, Star, Edit, Camera, Bell, Shield, Heart, Download, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
 
 interface ProfileProps {
@@ -18,6 +20,18 @@ interface ProfileProps {
 
 const Profile = ({ user, onLogout }: ProfileProps) => {
   const [activeTab, setActiveTab] = useState('reservations');
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: ''
+  });
+  const [notifications, setNotifications] = useState({
+    email: true,
+    sms: true
+  });
+  
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const reservations = [
     {
@@ -89,6 +103,45 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
     }
   };
 
+  const handleProfileUpdate = () => {
+    if (!profileData.name || !profileData.email) {
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm zorunlu alanları doldurun.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Başarılı!",
+      description: "Profil bilgileriniz başarıyla güncellendi.",
+    });
+  };
+
+  const handleReservationClick = (reservationId: number) => {
+    const reservation = reservations.find(r => r.id === reservationId);
+    if (reservation) {
+      navigate(`/field/${reservationId}`);
+    }
+  };
+
+  const handleFavoriteClick = (fieldId: number) => {
+    navigate(`/field/${fieldId}`);
+  };
+
+  const handleNotificationChange = (type: 'email' | 'sms') => {
+    setNotifications(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
+    
+    toast({
+      title: "Bildirim Ayarları",
+      description: `${type === 'email' ? 'E-posta' : 'SMS'} bildirimleri ${!notifications[type] ? 'açıldı' : 'kapatıldı'}.`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -100,17 +153,17 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
       
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Profile Header */}
-        <Card className="mb-8">
+        <Card className="mb-8 animate-fade-in hover:shadow-lg transition-shadow duration-300">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
-              <div className="relative">
-                <Avatar className="h-24 w-24">
+              <div className="relative group">
+                <Avatar className="h-24 w-24 group-hover:scale-105 transition-transform duration-300">
                   <AvatarImage src={user?.avatar} alt={user?.name} />
                   <AvatarFallback className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-2xl">
                     {user?.name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <Button size="sm" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0">
+                <Button size="sm" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 bg-green-500 hover:bg-green-600 transition-all hover:scale-110">
                   <Camera className="h-4 w-4" />
                 </Button>
               </div>
@@ -119,20 +172,20 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">{user?.name || 'Kullanıcı'}</h1>
                 <p className="text-gray-600 mb-4">{user?.email}</p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="animate-fade-in">
                     {user?.role === 'owner' ? 'Saha Sahibi' : 'Oyuncu'}
                   </Badge>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="animate-fade-in" style={{ animationDelay: '100ms' }}>
                     Üye: {new Date().getFullYear()}
                   </Badge>
                 </div>
               </div>
               
-              <div className="text-center">
+              <div className="text-center animate-fade-in" style={{ animationDelay: '200ms' }}>
                 <div className="text-2xl font-bold text-green-600">4.8</div>
                 <div className="flex justify-center mb-1">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="h-4 w-4 text-yellow-400 fill-current" />
+                    <Star key={star} className="h-4 w-4 text-yellow-400 fill-current hover:scale-125 transition-transform" />
                   ))}
                 </div>
                 <p className="text-sm text-gray-600">Kullanıcı Puanı</p>
@@ -142,18 +195,18 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
         </Card>
 
         {/* Profile Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="reservations">Rezervasyonlar</TabsTrigger>
-            <TabsTrigger value="favorites">Favoriler</TabsTrigger>
-            <TabsTrigger value="settings">Ayarlar</TabsTrigger>
-            <TabsTrigger value="activity">Aktivite</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-white shadow-lg rounded-lg">
+            <TabsTrigger value="reservations" className="transition-all hover:scale-105">Rezervasyonlar</TabsTrigger>
+            <TabsTrigger value="favorites" className="transition-all hover:scale-105">Favoriler</TabsTrigger>
+            <TabsTrigger value="settings" className="transition-all hover:scale-105">Ayarlar</TabsTrigger>
+            <TabsTrigger value="activity" className="transition-all hover:scale-105">Aktivite</TabsTrigger>
           </TabsList>
 
           {/* Reservations Tab */}
           <TabsContent value="reservations" className="space-y-6">
             <div className="grid gap-6">
-              <Card>
+              <Card className="animate-fade-in hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Calendar className="mr-2 h-5 w-5" />
@@ -165,17 +218,22 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {reservations.map((reservation) => (
-                      <Card key={reservation.id} className="hover:shadow-md transition-shadow">
+                    {reservations.map((reservation, index) => (
+                      <Card 
+                        key={reservation.id} 
+                        className="hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-fade-in"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                        onClick={() => handleReservationClick(reservation.id)}
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-center space-x-4">
                             <img 
                               src={reservation.image} 
                               alt={reservation.fieldName}
-                              className="w-16 h-16 rounded-lg object-cover"
+                              className="w-16 h-16 rounded-lg object-cover hover:scale-110 transition-transform duration-300"
                             />
                             <div className="flex-1">
-                              <h4 className="font-semibold">{reservation.fieldName}</h4>
+                              <h4 className="font-semibold hover:text-green-600 transition-colors">{reservation.fieldName}</h4>
                               <div className="flex items-center text-sm text-gray-600 mt-1">
                                 <MapPin className="h-4 w-4 mr-1" />
                                 {reservation.location}
@@ -193,7 +251,7 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                                 ₺{reservation.price}
                               </div>
                             </div>
-                            <ChevronRight className="h-5 w-5 text-gray-400" />
+                            <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors" />
                           </div>
                         </CardContent>
                       </Card>
@@ -206,10 +264,10 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
 
           {/* Favorites Tab */}
           <TabsContent value="favorites" className="space-y-6">
-            <Card>
+            <Card className="animate-fade-in hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Heart className="mr-2 h-5 w-5" />
+                  <Heart className="mr-2 h-5 w-5 text-red-500" />
                   Favori Sahalarım
                 </CardTitle>
                 <CardDescription>
@@ -218,17 +276,22 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {favorites.map((field) => (
-                    <Card key={field.id} className="hover:shadow-md transition-shadow">
+                  {favorites.map((field, index) => (
+                    <Card 
+                      key={field.id} 
+                      className="hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-fade-in"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                      onClick={() => handleFavoriteClick(field.id)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-4">
                           <img 
                             src={field.image} 
                             alt={field.name}
-                            className="w-16 h-16 rounded-lg object-cover"
+                            className="w-16 h-16 rounded-lg object-cover hover:scale-110 transition-transform duration-300"
                           />
                           <div className="flex-1">
-                            <h4 className="font-semibold">{field.name}</h4>
+                            <h4 className="font-semibold hover:text-green-600 transition-colors">{field.name}</h4>
                             <div className="flex items-center text-sm text-gray-600 mt-1">
                               <MapPin className="h-4 w-4 mr-1" />
                               {field.location}
@@ -255,7 +318,7 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
             <div className="grid gap-6">
-              <Card>
+              <Card className="animate-fade-in hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
                   <CardTitle>Profil Bilgileri</CardTitle>
                   <CardDescription>
@@ -266,25 +329,45 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Ad Soyad</Label>
-                      <Input id="name" defaultValue={user?.name} />
+                      <Input 
+                        id="name" 
+                        value={profileData.name}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                        className="transition-all focus:scale-105"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">E-posta</Label>
-                      <Input id="email" type="email" defaultValue={user?.email} />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={profileData.email}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                        className="transition-all focus:scale-105"
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Telefon</Label>
-                    <Input id="phone" placeholder="+90 5XX XXX XX XX" />
+                    <Input 
+                      id="phone" 
+                      placeholder="+90 5XX XXX XX XX"
+                      value={profileData.phone}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                      className="transition-all focus:scale-105"
+                    />
                   </div>
-                  <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
+                  <Button 
+                    onClick={handleProfileUpdate}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all hover:scale-105"
+                  >
                     <Edit className="mr-2 h-4 w-4" />
                     Bilgileri Güncelle
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="animate-fade-in hover:shadow-lg transition-shadow duration-300" style={{ animationDelay: '100ms' }}>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Bell className="mr-2 h-5 w-5" />
@@ -292,20 +375,30 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div>
                       <h4 className="font-medium">E-posta Bildirimleri</h4>
                       <p className="text-sm text-gray-600">Rezervasyon ve kampanya bilgileri</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <input 
+                      type="checkbox" 
+                      checked={notifications.email}
+                      onChange={() => handleNotificationChange('email')}
+                      className="rounded transition-all hover:scale-110" 
+                    />
                   </div>
                   <Separator />
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div>
                       <h4 className="font-medium">SMS Bildirimleri</h4>
                       <p className="text-sm text-gray-600">Rezervasyon hatırlatmaları</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <input 
+                      type="checkbox" 
+                      checked={notifications.sms}
+                      onChange={() => handleNotificationChange('sms')}
+                      className="rounded transition-all hover:scale-110" 
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -314,7 +407,7 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
 
           {/* Activity Tab */}
           <TabsContent value="activity" className="space-y-6">
-            <Card>
+            <Card className="animate-fade-in hover:shadow-lg transition-shadow duration-300">
               <CardHeader>
                 <CardTitle>Son Aktiviteler</CardTitle>
                 <CardDescription>
@@ -329,7 +422,7 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                     { action: "Profil güncellendi", detail: "Telefon numarası değiştirildi", time: "3 gün önce", icon: Edit },
                     { action: "Rezervasyon tamamlandı", detail: "Boğaziçi Sports Club", time: "1 hafta önce", icon: Star }
                   ].map((activity, index) => (
-                    <div key={index} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                    <div key={index} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-all animate-fade-in hover:scale-[1.02]" style={{ animationDelay: `${index * 100}ms` }}>
                       <div className="p-2 bg-green-100 rounded-full">
                         <activity.icon className="h-4 w-4 text-green-600" />
                       </div>

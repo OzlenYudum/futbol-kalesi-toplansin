@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Filter, Star, Lightbulb, Car, Shirt, Wifi, Coffee, Camera, Users, Zap, Clock } from 'lucide-react';
+import { Search, MapPin, Filter, Star, Lightbulb, Car, Shirt, Wifi, Coffee, Camera, Users, Zap, Clock, Heart, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
 import FieldCard from '@/components/FieldCard';
 
@@ -28,6 +30,9 @@ const Fields = ({ user, setUser }: FieldsProps) => {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('rating');
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const featuredFields = [
     {
@@ -175,6 +180,18 @@ const Fields = ({ user, setUser }: FieldsProps) => {
 
     return matchesSearch && matchesLighting && matchesShoeRental && matchesParking && 
            matchesWifi && matchesCafeteria && matchesLocker && matchesPrice && matchesRating;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return a.pricePerHour - b.pricePerHour;
+      case 'price-high':
+        return b.pricePerHour - a.pricePerHour;
+      case 'reviews':
+        return b.reviewCount - a.reviewCount;
+      case 'rating':
+      default:
+        return b.rating - a.rating;
+    }
   });
 
   const toggleFilter = (filterName: string) => {
@@ -182,6 +199,31 @@ const Fields = ({ user, setUser }: FieldsProps) => {
       ...prev,
       [filterName]: !prev[filterName as keyof typeof prev]
     }));
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      city: '',
+      district: '',
+      priceRange: '',
+      lighting: false,
+      shoeRental: false,
+      parking: false,
+      wifi: false,
+      cafeteria: false,
+      locker: false,
+      rating: ''
+    });
+    setSearchTerm('');
+    setSortBy('rating');
+    toast({
+      title: "Filtreler Temizlendi",
+      description: "Tüm filtreler başarıyla temizlendi.",
+    });
+  };
+
+  const handleFieldClick = (fieldId: number) => {
+    navigate(`/field/${fieldId}`);
   };
 
   return (
@@ -195,7 +237,7 @@ const Fields = ({ user, setUser }: FieldsProps) => {
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Enhanced Header Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 animate-fade-in">
           <h1 className="text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
               Premium Halı Sahalar
@@ -203,15 +245,15 @@ const Fields = ({ user, setUser }: FieldsProps) => {
           </h1>
           <p className="text-xl text-gray-600 mb-6">İstanbul'un en kaliteli halı sahalarını keşfet ve hemen rezervasyon yap</p>
           <div className="flex items-center justify-center gap-8 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '100ms' }}>
               <Zap className="h-4 w-4 text-green-500" />
               <span>Anında Rezervasyon</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '200ms' }}>
               <Star className="h-4 w-4 text-yellow-500" />
               <span>Doğrulanmış Yorumlar</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '300ms' }}>
               <Clock className="h-4 w-4 text-blue-500" />
               <span>7/24 Destek</span>
             </div>
@@ -219,7 +261,7 @@ const Fields = ({ user, setUser }: FieldsProps) => {
         </div>
 
         {/* Enhanced Search and Filter Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-8 border border-white/50">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-8 border border-white/50 animate-fade-in">
           <div className="grid lg:grid-cols-4 gap-6 mb-8">
             {/* Enhanced Search */}
             <div className="lg:col-span-2">
@@ -229,7 +271,7 @@ const Fields = ({ user, setUser }: FieldsProps) => {
                   placeholder="Saha adı, konum veya özellik ara..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 backdrop-blur-sm"
+                  className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 backdrop-blur-sm transition-all focus:scale-105"
                 />
               </div>
             </div>
@@ -237,10 +279,10 @@ const Fields = ({ user, setUser }: FieldsProps) => {
             {/* Location Filters */}
             <div>
               <Select value={filters.city} onValueChange={(value) => setFilters(prev => ({ ...prev, city: value }))}>
-                <SelectTrigger className="h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70">
+                <SelectTrigger className="h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 transition-all hover:scale-105">
                   <SelectValue placeholder="Şehir seçin" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
                   <SelectItem value="istanbul">İstanbul</SelectItem>
                   <SelectItem value="ankara">Ankara</SelectItem>
                   <SelectItem value="izmir">İzmir</SelectItem>
@@ -250,10 +292,10 @@ const Fields = ({ user, setUser }: FieldsProps) => {
 
             <div>
               <Select value={filters.district} onValueChange={(value) => setFilters(prev => ({ ...prev, district: value }))}>
-                <SelectTrigger className="h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70">
+                <SelectTrigger className="h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 transition-all hover:scale-105">
                   <SelectValue placeholder="İlçe seçin" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
                   <SelectItem value="besiktas">Beşiktaş</SelectItem>
                   <SelectItem value="sisli">Şişli</SelectItem>
                   <SelectItem value="kadikoy">Kadıköy</SelectItem>
@@ -271,15 +313,23 @@ const Fields = ({ user, setUser }: FieldsProps) => {
                 <Filter className="h-5 w-5 text-green-600" />
                 <span className="font-semibold text-gray-700 text-lg">Gelişmiş Filtreler</span>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllFilters}
+                className="ml-auto text-gray-600 hover:text-red-600 hover:border-red-300 transition-all"
+              >
+                Filtreleri Temizle
+              </Button>
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
                 <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
-                  <SelectTrigger className="border-2 border-gray-200 focus:border-green-500 rounded-lg">
+                  <SelectTrigger className="border-2 border-gray-200 focus:border-green-500 rounded-lg transition-all hover:scale-105">
                     <SelectValue placeholder="Fiyat Aralığı" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
                     <SelectItem value="low">₺100 - ₺200</SelectItem>
                     <SelectItem value="medium">₺200 - ₺280</SelectItem>
                     <SelectItem value="high">₺280+</SelectItem>
@@ -289,10 +339,10 @@ const Fields = ({ user, setUser }: FieldsProps) => {
 
               <div>
                 <Select value={filters.rating} onValueChange={(value) => setFilters(prev => ({ ...prev, rating: value }))}>
-                  <SelectTrigger className="border-2 border-gray-200 focus:border-green-500 rounded-lg">
+                  <SelectTrigger className="border-2 border-gray-200 focus:border-green-500 rounded-lg transition-all hover:scale-105">
                     <SelectValue placeholder="Minimum Puan" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
                     <SelectItem value="4+">4.0+ ⭐</SelectItem>
                     <SelectItem value="4.5+">4.5+ ⭐</SelectItem>
                     <SelectItem value="4.8+">4.8+ ⭐</SelectItem>
@@ -310,7 +360,7 @@ const Fields = ({ user, setUser }: FieldsProps) => {
                 { key: 'wifi', icon: Wifi, label: 'WiFi' },
                 { key: 'cafeteria', icon: Coffee, label: 'Kafeterya' },
                 { key: 'locker', icon: Users, label: 'Soyunma Odası' }
-              ].map(({ key, icon: Icon, label }) => (
+              ].map(({ key, icon: Icon, label }, index) => (
                 <Button
                   key={key}
                   variant={filters[key as keyof typeof filters] ? "default" : "outline"}
@@ -320,7 +370,8 @@ const Fields = ({ user, setUser }: FieldsProps) => {
                     filters[key as keyof typeof filters] 
                       ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" 
                       : "hover:bg-green-50 hover:border-green-300"
-                  } transition-all duration-200 px-4 py-2`}
+                  } transition-all duration-200 px-4 py-2 animate-fade-in hover:scale-105`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <Icon className="mr-2 h-4 w-4" />
                   {label}
@@ -331,7 +382,7 @@ const Fields = ({ user, setUser }: FieldsProps) => {
         </div>
 
         {/* Enhanced Results Header */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-in">
           <div className="flex justify-between items-center bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-1">
@@ -339,11 +390,11 @@ const Fields = ({ user, setUser }: FieldsProps) => {
               </h2>
               <p className="text-gray-600">Size en uygun sahayı seçin ve rezervasyon yapın</p>
             </div>
-            <Select defaultValue="rating">
-              <SelectTrigger className="w-48 border-2 border-gray-200 focus:border-green-500">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-48 border-2 border-gray-200 focus:border-green-500 transition-all hover:scale-105">
                 <SelectValue placeholder="Sırala" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
                 <SelectItem value="rating">En Yüksek Puan</SelectItem>
                 <SelectItem value="price-low">En Düşük Fiyat</SelectItem>
                 <SelectItem value="price-high">En Yüksek Fiyat</SelectItem>
@@ -355,13 +406,20 @@ const Fields = ({ user, setUser }: FieldsProps) => {
 
         {/* Enhanced Fields Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredFields.map((field) => (
-            <FieldCard key={field.id} field={field} />
+          {filteredFields.map((field, index) => (
+            <div 
+              key={field.id} 
+              className="animate-fade-in cursor-pointer group"
+              style={{ animationDelay: `${index * 100}ms` }}
+              onClick={() => handleFieldClick(field.id)}
+            >
+              <FieldCard field={field} />
+            </div>
           ))}
         </div>
 
         {filteredFields.length === 0 && (
-          <div className="text-center py-16">
+          <div className="text-center py-16 animate-fade-in">
             <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl">
               <div className="text-gray-400 mb-6">
                 <Search className="mx-auto h-16 w-16" />
@@ -369,19 +427,8 @@ const Fields = ({ user, setUser }: FieldsProps) => {
               <h3 className="text-2xl font-medium text-gray-900 mb-4">Aradığınız kriterlere uygun saha bulunamadı</h3>
               <p className="text-gray-600 mb-6">Filtreleri değiştirerek tekrar deneyin veya farklı kriterler kullanın</p>
               <Button 
-                onClick={() => setFilters({
-                  city: '',
-                  district: '',
-                  priceRange: '',
-                  lighting: false,
-                  shoeRental: false,
-                  parking: false,
-                  wifi: false,
-                  cafeteria: false,
-                  locker: false,
-                  rating: ''
-                })}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                onClick={clearAllFilters}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 transition-all hover:scale-105"
               >
                 Filtreleri Temizle
               </Button>
