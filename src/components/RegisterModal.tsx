@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Phone, Mail, User } from 'lucide-react';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -18,11 +18,13 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     role: 'user'
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,6 +42,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
         id: 1,
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         role: formData.role,
         avatar: null
       };
@@ -64,7 +67,10 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Ad Soyad</Label>
+            <Label htmlFor="name" className="flex items-center space-x-2">
+              <User className="h-4 w-4 text-green-600" />
+              <span>Ad Soyad</span>
+            </Label>
             <Input
               id="name"
               type="text"
@@ -77,13 +83,32 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">E-posta</Label>
+            <Label htmlFor="email" className="flex items-center space-x-2">
+              <Mail className="h-4 w-4 text-green-600" />
+              <span>E-posta</span>
+            </Label>
             <Input
               id="email"
               type="email"
               placeholder="ornek@email.com"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
+              required
+              className="focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="phone" className="flex items-center space-x-2">
+              <Phone className="h-4 w-4 text-green-600" />
+              <span>Telefon Numarası</span>
+            </Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="0555 123 45 67"
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
               required
               className="focus:ring-2 focus:ring-green-500"
             />
@@ -138,15 +163,30 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
           
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Şifrenizi tekrar girin"
-              value={formData.confirmPassword}
-              onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-              required
-              className="focus:ring-2 focus:ring-green-500"
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Şifrenizi tekrar girin"
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                required
+                className="focus:ring-2 focus:ring-green-500 pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center">
