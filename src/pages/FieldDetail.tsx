@@ -8,11 +8,16 @@ import { Calendar } from "@/components/ui/calendar";
 import { Star, MapPin, Clock, Users, Wifi, Car, Lightbulb, Coffee, Shirt, Camera, Phone, Shield, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import Header from '@/components/Header';
 import ReviewSection from '@/components/ReviewSection';
+import { toast } from "sonner";
 
-const FieldDetail = () => {
+interface FieldDetailProps {
+  user: any;
+  setUser: (user: any) => void;
+}
+
+const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
@@ -102,15 +107,30 @@ const FieldDetail = () => {
   const bookedSlots = ["14:00", "18:00", "20:00"]; // Mock booked slots
 
   const handleBooking = () => {
-    if (!selectedDate || !selectedTime) {
-      alert("Lütfen tarih ve saat seçiniz!");
+    if (!user) {
+      toast.error("Rezervasyon yapmak için giriş yapmalısınız!");
       return;
     }
-    alert(`Rezervasyon yapıldı!\nTarih: ${selectedDate.toLocaleDateString('tr-TR')}\nSaat: ${selectedTime}\nSaha: ${field.name}`);
+    
+    if (!selectedDate || !selectedTime) {
+      toast.error("Lütfen tarih ve saat seçiniz!");
+      return;
+    }
+    
+    toast.success(`Rezervasyon yapıldı!\nTarih: ${selectedDate.toLocaleDateString('tr-TR')}\nSaat: ${selectedTime}\nSaha: ${field.name}`);
+  };
+
+  const handleFavorite = () => {
+    if (!user) {
+      toast.error("Favorilere eklemek için giriş yapmalısınız!");
+      return;
+    }
+    setIsFavorite(!isFavorite);
+    toast.success(isFavorite ? "Favorilerden çıkarıldı" : "Favorilere eklendi");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <Header 
         user={user} 
         onLoginClick={() => {}}
@@ -120,25 +140,25 @@ const FieldDetail = () => {
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <Button
             variant="ghost"
             onClick={() => navigate('/fields')}
-            className="flex items-center gap-2 text-gray-600 hover:text-green-600"
+            className="flex items-center gap-2 text-gray-600 hover:text-green-600 hover:bg-green-50 transition-all duration-200"
           >
             <ArrowLeft className="h-4 w-4" />
             Sahalara Dön
           </Button>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsFavorite(!isFavorite)}
-              className={isFavorite ? "text-red-500 hover:text-red-600" : "text-gray-400 hover:text-red-500"}
+              onClick={handleFavorite}
+              className={`transition-all duration-200 ${isFavorite ? "text-red-500 hover:text-red-600 bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
             >
               <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
             </Button>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-green-600">
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200">
               <Share2 className="h-5 w-5" />
             </Button>
           </div>
@@ -146,89 +166,102 @@ const FieldDetail = () => {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Image Gallery */}
-            <div className="relative">
-              <div className="grid grid-cols-4 gap-2 h-96">
-                <div className="col-span-2 row-span-2">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Enhanced Image Gallery */}
+            <div className="relative group">
+              <div className="grid grid-cols-4 gap-3 h-96 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="col-span-2 row-span-2 relative overflow-hidden">
                   <img 
                     src={field.images[0]} 
                     alt={field.name}
-                    className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300 cursor-pointer"
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500 cursor-pointer"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
-                <div className="col-span-2 grid grid-cols-2 gap-2">
+                <div className="col-span-2 grid grid-cols-2 gap-3">
                   {field.images.slice(1).map((image, index) => (
-                    <img 
-                      key={index}
-                      src={image} 
-                      alt={`${field.name} ${index + 2}`}
-                      className="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-300 cursor-pointer"
-                    />
+                    <div key={index} className="relative overflow-hidden rounded-lg">
+                      <img 
+                        src={image} 
+                        alt={`${field.name} ${index + 2}`}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500 cursor-pointer"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                    </div>
                   ))}
                 </div>
               </div>
-              <Badge className="absolute top-4 left-4 bg-green-600 text-white">
+              <Badge className="absolute top-6 left-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 text-lg shadow-lg">
                 ₺{field.pricePerHour}/saat
               </Badge>
             </div>
 
-            {/* Field Info */}
-            <div>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{field.name}</h1>
-                  <div className="flex items-center gap-4 text-gray-600 mb-2">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>{field.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Phone className="h-4 w-4" />
-                      <span>{field.phone}</span>
+            {/* Enhanced Field Info */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex-1">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
+                      {field.name}
+                    </h1>
+                    <div className="space-y-3 text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-green-600" />
+                        <span className="text-lg">{field.location}</span>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-5 w-5 text-green-600" />
+                          <span>{field.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-green-600" />
+                          <span>{field.workingHours}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-5 w-5 text-green-600" />
+                          <span>{field.capacity}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{field.workingHours}</span>
+                  <div className="text-right bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border border-yellow-200">
+                    <div className="flex items-center gap-2 mb-2 justify-end">
+                      <Star className="h-6 w-6 text-yellow-500 fill-current" />
+                      <span className="text-2xl font-bold text-gray-900">{field.rating}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      <span>{field.capacity}</span>
-                    </div>
+                    <span className="text-gray-600">({field.reviewCount} yorum)</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1 mb-1">
-                    <Star className="h-5 w-5 text-yellow-500 fill-current" />
-                    <span className="text-xl font-semibold">{field.rating}</span>
-                  </div>
-                  <span className="text-gray-500">({field.reviewCount} yorum)</span>
-                </div>
-              </div>
 
-              <p className="text-gray-700 leading-relaxed">{field.description}</p>
-            </div>
+                <p className="text-gray-700 leading-relaxed text-lg bg-gray-50 p-6 rounded-xl border-l-4 border-green-500">
+                  {field.description}
+                </p>
+              </CardContent>
+            </Card>
 
-            {/* Amenities */}
-            <Card>
+            {/* Enhanced Amenities */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Özellikler ve Hizmetler</CardTitle>
+                <CardTitle className="text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Özellikler ve Hizmetler
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {field.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                      <amenity.icon className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-medium">{amenity.name}</span>
+                    <div key={index} className="group flex items-center gap-3 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                      <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                        <amenity.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="font-medium text-gray-800">{amenity.name}</span>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Reviews Section */}
+            {/* Enhanced Reviews Section */}
             <ReviewSection
               fieldId={field.id}
               fieldName={field.name}
@@ -239,33 +272,46 @@ const FieldDetail = () => {
             />
           </div>
 
-          {/* Booking Sidebar */}
+          {/* Enhanced Booking Sidebar */}
           <div className="space-y-6">
-            <Card className="sticky top-4">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+            <Card className="sticky top-4 border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center justify-between text-xl">
                   <span>Rezervasyon Yap</span>
-                  <span className="text-green-600 font-bold">₺{field.pricePerHour}/saat</span>
+                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                    ₺{field.pricePerHour}/saat
+                  </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 p-6">
+                {!user && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+                    <p className="text-orange-800 font-medium mb-2">Rezervasyon yapmak için giriş yapın</p>
+                    <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+                      Giriş Yap
+                    </Button>
+                  </div>
+                )}
+
                 {/* Date Selection */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tarih Seçin</label>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border"
-                  />
+                  <label className="block text-sm font-semibold mb-3 text-gray-700">Tarih Seçin</label>
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={(date) => date < new Date() || !user}
+                      className="rounded-md"
+                    />
+                  </div>
                 </div>
 
                 {/* Time Selection */}
-                {selectedDate && (
+                {selectedDate && user && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">Saat Seçin</label>
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                    <label className="block text-sm font-semibold mb-3 text-gray-700">Saat Seçin</label>
+                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto bg-gray-50 p-3 rounded-lg">
                       {timeSlots.map((time) => {
                         const isBooked = bookedSlots.includes(time);
                         const isSelected = selectedTime === time;
@@ -278,43 +324,42 @@ const FieldDetail = () => {
                             onClick={() => setSelectedTime(time)}
                             className={`${
                               isSelected 
-                                ? "bg-green-600 hover:bg-green-700" 
+                                ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" 
                                 : isBooked 
-                                  ? "opacity-50 cursor-not-allowed" 
-                                  : "hover:bg-green-50"
-                            }`}
+                                  ? "opacity-50 cursor-not-allowed bg-red-100 text-red-600" 
+                                  : "hover:bg-green-50 hover:border-green-300"
+                            } transition-all duration-200`}
                           >
                             {time}
                           </Button>
                         );
                       })}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Kırmızı renkli saatler dolu
-                    </p>
                   </div>
                 )}
 
                 {/* Booking Summary */}
-                {selectedDate && selectedTime && (
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Rezervasyon Özeti</h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>Tarih:</span>
-                        <span>{selectedDate.toLocaleDateString('tr-TR')}</span>
+                {selectedDate && selectedTime && user && (
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+                    <h4 className="font-semibold mb-4 text-gray-800 text-lg">Rezervasyon Özeti</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Tarih:</span>
+                        <span className="font-medium">{selectedDate.toLocaleDateString('tr-TR')}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Saat:</span>
-                        <span>{selectedTime}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Saat:</span>
+                        <span className="font-medium">{selectedTime}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Süre:</span>
-                        <span>1 saat</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Süre:</span>
+                        <span className="font-medium">1 saat</span>
                       </div>
-                      <div className="flex justify-between font-medium border-t pt-2 mt-2">
-                        <span>Toplam:</span>
-                        <span>₺{field.pricePerHour}</span>
+                      <div className="border-t border-green-200 pt-3 mt-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold text-gray-800">Toplam:</span>
+                          <span className="text-xl font-bold text-green-600">₺{field.pricePerHour}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -322,40 +367,35 @@ const FieldDetail = () => {
 
                 <Button 
                   onClick={handleBooking}
-                  disabled={!selectedDate || !selectedTime}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                  disabled={!selectedDate || !selectedTime || !user}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  Rezervasyon Yap
+                  {!user ? "Giriş Yapın" : "Rezervasyon Yap"}
                 </Button>
 
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-gray-500 text-center bg-gray-50 p-3 rounded-lg">
                   Rezervasyonunuz onaylandıktan sonra SMS ile bilgilendirileceksiniz.
                 </p>
               </CardContent>
             </Card>
 
-            {/* Quick Info */}
-            <Card>
+            {/* Enhanced Quick Info */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Hızlı Bilgiler</CardTitle>
+                <CardTitle className="text-lg text-gray-800">Hızlı Bilgiler</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Minimum rezervasyon:</span>
-                  <span className="font-medium">1 saat</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">İptal politikası:</span>
-                  <span className="font-medium">2 saat öncesine kadar</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Ödeme:</span>
-                  <span className="font-medium">Nakit/Kart</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Yaş sınırı:</span>
-                  <span className="font-medium">16+</span>
-                </div>
+              <CardContent className="space-y-4">
+                {[
+                  { label: "Minimum rezervasyon:", value: "1 saat" },
+                  { label: "İptal politikası:", value: "2 saat öncesine kadar" },
+                  { label: "Ödeme:", value: "Nakit/Kart" },
+                  { label: "Yaş sınırı:", value: "16+" }
+                ].map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                    <span className="text-gray-600">{item.label}</span>
+                    <span className="font-medium text-gray-800">{item.value}</span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
