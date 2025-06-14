@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,12 @@ interface RegisterModalProps {
   onRegister: (user: any) => void;
 }
 
-const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: RegisterModalProps) => {
+export default function RegisterModal({
+  isOpen,
+  onClose,
+  onSwitchToLogin,
+  onRegister
+}: RegisterModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,34 +31,48 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert('Şifreler eşleşmiyor!');
       return;
     }
-    
+
     setLoading(true);
-    
-    // Simulate registration process
-    setTimeout(() => {
-      const user = {
-        id: 1,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        avatar: null
-      };
+    try {
+      const res = await fetch('http://localhost:5000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          role: formData.role
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Kayıt işlemi başarısız');
+      }
+
+      const { user, token } = await res.json();
+      localStorage.setItem('token', token);
       onRegister(user);
       onClose();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -64,7 +82,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
             Kayıt Ol
           </DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label htmlFor="name" className="flex items-center space-x-2">
@@ -81,7 +99,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
               className="focus:ring-2 focus:ring-green-500"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center space-x-2">
               <Mail className="h-4 w-4 text-green-600" />
@@ -97,7 +115,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
               className="focus:ring-2 focus:ring-green-500"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="phone" className="flex items-center space-x-2">
               <Phone className="h-4 w-4 text-green-600" />
@@ -113,11 +131,11 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
               className="focus:ring-2 focus:ring-green-500"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label>Hesap Türü</Label>
-            <RadioGroup 
-              value={formData.role} 
+            <RadioGroup
+              value={formData.role}
               onValueChange={(value) => handleInputChange('role', value)}
               className="flex space-x-6"
             >
@@ -131,7 +149,7 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
               </div>
             </RadioGroup>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Şifre</Label>
             <div className="relative">
@@ -152,15 +170,11 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
-                )}
+                {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
               </Button>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Şifre Tekrar</Label>
             <div className="relative">
@@ -180,15 +194,11 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <Eye className="h-4 w-4 text-gray-400" />
-                )}
+                {showConfirmPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
               </Button>
             </div>
           </div>
-          
+
           <div className="flex items-center">
             <input type="checkbox" required className="rounded border-gray-300" />
             <span className="ml-2 text-sm text-gray-600">
@@ -196,20 +206,20 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
               <a href="#" className="text-green-600 hover:underline">Gizlilik Politikası</a>'nı kabul ediyorum
             </span>
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
             disabled={loading}
           >
-            {loading ? 'Kayıt oluşturuluyor...' : 'Kayıt Ol'}
+            {loading ? 'Kayıt Oluşturuluyor…' : 'Kayıt Ol'}
           </Button>
         </form>
-        
+
         <div className="text-center mt-4">
           <span className="text-sm text-gray-600">
             Zaten hesabın var mı?{' '}
-            <button 
+            <button
               onClick={onSwitchToLogin}
               className="text-green-600 hover:underline font-medium"
             >
@@ -220,6 +230,4 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegister }: Registe
       </DialogContent>
     </Dialog>
   );
-};
-
-export default RegisterModal;
+}
