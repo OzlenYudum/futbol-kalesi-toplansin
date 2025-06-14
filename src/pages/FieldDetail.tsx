@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, MapPin, Clock, Users, Wifi, Car, Lightbulb, Coffee, Shirt, Camera, Phone, Shield, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import Header from '@/components/Header';
+import ReviewSection from '@/components/ReviewSection';
 
 const FieldDetail = () => {
   const { id } = useParams();
@@ -45,34 +44,55 @@ const FieldDetail = () => {
     description: "Modern tesisleri ve geniş alanı ile futbol tutkunlarının tercihi olan halı sahamız, profesyonel kalitede zemin ve tam donanımlı tesisleri ile unutulmaz maçlar yaşamanızı sağlar.",
     phone: "+90 212 555 0123",
     workingHours: "06:00 - 02:00",
-    capacity: "10v10, 7v7, 5v5",
-    reviews: [
-      {
-        id: 1,
-        user: "Mehmet Yılmaz",
-        rating: 5,
-        comment: "Harika bir saha! Zemin kalitesi mükemmel ve tesisler çok temiz. Kesinlikle tavsiye ederim.",
-        date: "2024-01-15",
-        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-      },
-      {
-        id: 2,
-        user: "Ayşe Kara",
-        rating: 4,
-        comment: "Çok güzel bir kompleks. Park sorunu yok ve personel çok ilgili. Sadece kafeterya biraz pahalı.",
-        date: "2024-01-10",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b647?w=40&h=40&fit=crop&crop=face"
-      },
-      {
-        id: 3,
-        user: "Can Demir",
-        rating: 5,
-        comment: "Arkadaşlarımla düzenli olarak geliyoruz. Rezervasyon sistemi çok kolay ve saha her zaman temiz.",
-        date: "2024-01-05",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-      }
-    ]
+    capacity: "10v10, 7v7, 5v5"
   };
+
+  const mockReviews = [
+    {
+      id: 1,
+      user: "Mehmet Yılmaz",
+      rating: 5,
+      comment: "Harika bir saha! Zemin kalitesi mükemmel ve tesisler çok temiz. Kesinlikle tavsiye ederim. Işıklandırma da çok iyi, gece maçları için ideal.",
+      date: "2024-01-15",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+      helpful: 8,
+      notHelpful: 1,
+      verified: true
+    },
+    {
+      id: 2,
+      user: "Ayşe Kara",
+      rating: 4,
+      comment: "Çok güzel bir kompleks. Park sorunu yok ve personel çok ilgili. Sadece kafeterya biraz pahalı. Genel olarak memnun kaldım.",
+      date: "2024-01-10",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b647?w=40&h=40&fit=crop&crop=face",
+      helpful: 5,
+      notHelpful: 0,
+      verified: true
+    },
+    {
+      id: 3,
+      user: "Can Demir",
+      rating: 5,
+      comment: "Arkadaşlarımla düzenli olarak geliyoruz. Rezervasyon sistemi çok kolay ve saha her zaman temiz. Soyunma odaları da çok düzenli.",
+      date: "2024-01-05",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
+      helpful: 12,
+      notHelpful: 2,
+      verified: true
+    },
+    {
+      id: 4,
+      user: "Fatma Özkan",
+      rating: 3,
+      comment: "Saha güzel ama rezervasyon iptal politikası biraz sıkı. 2 saat öncesinden iptal etmek zorunda kalmak bazen zor oluyor.",
+      date: "2024-01-02",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
+      helpful: 3,
+      notHelpful: 4,
+      verified: false
+    }
+  ];
 
   const timeSlots = [
     "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
@@ -208,42 +228,15 @@ const FieldDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Reviews */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Yorumlar</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {field.reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
-                      <div className="flex items-start gap-3">
-                        <img 
-                          src={review.avatar} 
-                          alt={review.user}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{review.user}</span>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star 
-                                  key={i} 
-                                  className={`h-4 w-4 ${i < review.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
-                                />
-                              ))}
-                            </div>
-                            <span className="text-gray-500 text-sm">{new Date(review.date).toLocaleDateString('tr-TR')}</span>
-                          </div>
-                          <p className="text-gray-700">{review.comment}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Reviews Section */}
+            <ReviewSection
+              fieldId={field.id}
+              fieldName={field.name}
+              averageRating={field.rating}
+              totalReviews={field.reviewCount}
+              reviews={mockReviews}
+              isLoggedIn={!!user}
+            />
           </div>
 
           {/* Booking Sidebar */}
