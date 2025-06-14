@@ -274,130 +274,132 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
 
           {/* Enhanced Booking Sidebar */}
           <div className="space-y-6">
-            <Card className="sticky top-4 border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center justify-between text-xl">
-                  <span>Rezervasyon Yap</span>
-                  <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                    ₺{field.pricePerHour}/saat
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
-                {!user && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
-                    <p className="text-orange-800 font-medium mb-2">Rezervasyon yapmak için giriş yapın</p>
-                    <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-                      Giriş Yap
-                    </Button>
-                  </div>
-                )}
+            <div className="lg:sticky lg:top-4 space-y-6">
+              <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm z-10">
+                <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center justify-between text-xl">
+                    <span>Rezervasyon Yap</span>
+                    <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                      ₺{field.pricePerHour}/saat
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 p-6">
+                  {!user && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+                      <p className="text-orange-800 font-medium mb-2">Rezervasyon yapmak için giriş yapın</p>
+                      <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+                        Giriş Yap
+                      </Button>
+                    </div>
+                  )}
 
-                {/* Date Selection */}
-                <div>
-                  <label className="block text-sm font-semibold mb-3 text-gray-700">Tarih Seçin</label>
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      disabled={(date) => date < new Date() || !user}
-                      className="rounded-md"
-                    />
-                  </div>
-                </div>
-
-                {/* Time Selection */}
-                {selectedDate && user && (
+                  {/* Date Selection */}
                   <div>
-                    <label className="block text-sm font-semibold mb-3 text-gray-700">Saat Seçin</label>
-                    <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto bg-gray-50 p-3 rounded-lg">
-                      {timeSlots.map((time) => {
-                        const isBooked = bookedSlots.includes(time);
-                        const isSelected = selectedTime === time;
-                        return (
-                          <Button
-                            key={time}
-                            variant={isSelected ? "default" : "outline"}
-                            size="sm"
-                            disabled={isBooked}
-                            onClick={() => setSelectedTime(time)}
-                            className={`${
-                              isSelected 
-                                ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" 
-                                : isBooked 
-                                  ? "opacity-50 cursor-not-allowed bg-red-100 text-red-600" 
-                                  : "hover:bg-green-50 hover:border-green-300"
-                            } transition-all duration-200`}
-                          >
-                            {time}
-                          </Button>
-                        );
-                      })}
+                    <label className="block text-sm font-semibold mb-3 text-gray-700">Tarih Seçin</label>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        disabled={(date) => date < new Date() || !user}
+                        className="rounded-md"
+                      />
                     </div>
                   </div>
-                )}
 
-                {/* Booking Summary */}
-                {selectedDate && selectedTime && user && (
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
-                    <h4 className="font-semibold mb-4 text-gray-800 text-lg">Rezervasyon Özeti</h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Tarih:</span>
-                        <span className="font-medium">{selectedDate.toLocaleDateString('tr-TR')}</span>
+                  {/* Time Selection */}
+                  {selectedDate && user && (
+                    <div>
+                      <label className="block text-sm font-semibold mb-3 text-gray-700">Saat Seçin</label>
+                      <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto bg-gray-50 p-3 rounded-lg">
+                        {timeSlots.map((time) => {
+                          const isBooked = bookedSlots.includes(time);
+                          const isSelected = selectedTime === time;
+                          return (
+                            <Button
+                              key={time}
+                              variant={isSelected ? "default" : "outline"}
+                              size="sm"
+                              disabled={isBooked}
+                              onClick={() => setSelectedTime(time)}
+                              className={`${
+                                isSelected 
+                                  ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" 
+                                  : isBooked 
+                                    ? "opacity-50 cursor-not-allowed bg-red-100 text-red-600" 
+                                    : "hover:bg-green-50 hover:border-green-300"
+                              } transition-all duration-200`}
+                            >
+                              {time}
+                            </Button>
+                          );
+                        })}
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Saat:</span>
-                        <span className="font-medium">{selectedTime}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Süre:</span>
-                        <span className="font-medium">1 saat</span>
-                      </div>
-                      <div className="border-t border-green-200 pt-3 mt-3">
+                    </div>
+                  )}
+
+                  {/* Booking Summary */}
+                  {selectedDate && selectedTime && user && (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200">
+                      <h4 className="font-semibold mb-4 text-gray-800 text-lg">Rezervasyon Özeti</h4>
+                      <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                          <span className="text-lg font-semibold text-gray-800">Toplam:</span>
-                          <span className="text-xl font-bold text-green-600">₺{field.pricePerHour}</span>
+                          <span className="text-gray-600">Tarih:</span>
+                          <span className="font-medium">{selectedDate.toLocaleDateString('tr-TR')}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Saat:</span>
+                          <span className="font-medium">{selectedTime}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Süre:</span>
+                          <span className="font-medium">1 saat</span>
+                        </div>
+                        <div className="border-t border-green-200 pt-3 mt-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-semibold text-gray-800">Toplam:</span>
+                            <span className="text-xl font-bold text-green-600">₺{field.pricePerHour}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <Button 
-                  onClick={handleBooking}
-                  disabled={!selectedDate || !selectedTime || !user}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  {!user ? "Giriş Yapın" : "Rezervasyon Yap"}
-                </Button>
+                  <Button 
+                    onClick={handleBooking}
+                    disabled={!selectedDate || !selectedTime || !user}
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    {!user ? "Giriş Yapın" : "Rezervasyon Yap"}
+                  </Button>
 
-                <p className="text-xs text-gray-500 text-center bg-gray-50 p-3 rounded-lg">
-                  Rezervasyonunuz onaylandıktan sonra SMS ile bilgilendirileceksiniz.
-                </p>
-              </CardContent>
-            </Card>
+                  <p className="text-xs text-gray-500 text-center bg-gray-50 p-3 rounded-lg">
+                    Rezervasyonunuz onaylandıktan sonra SMS ile bilgilendirileceksiniz.
+                  </p>
+                </CardContent>
+              </Card>
 
-            {/* Enhanced Quick Info */}
-            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-lg text-gray-800">Hızlı Bilgiler</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  { label: "Minimum rezervasyon:", value: "1 saat" },
-                  { label: "İptal politikası:", value: "2 saat öncesine kadar" },
-                  { label: "Ödeme:", value: "Nakit/Kart" },
-                  { label: "Yaş sınırı:", value: "16+" }
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                    <span className="text-gray-600">{item.label}</span>
-                    <span className="font-medium text-gray-800">{item.value}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+              {/* Enhanced Quick Info */}
+              <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-lg text-gray-800">Hızlı Bilgiler</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { label: "Minimum rezervasyon:", value: "1 saat" },
+                    { label: "İptal politikası:", value: "2 saat öncesine kadar" },
+                    { label: "Ödeme:", value: "Nakit/Kart" },
+                    { label: "Yaş sınırı:", value: "16+" }
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                      <span className="text-gray-600">{item.label}</span>
+                      <span className="font-medium text-gray-800">{item.value}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
