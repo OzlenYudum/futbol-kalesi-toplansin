@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Star, MapPin, Clock, Users, Wifi, Car, Lightbulb, Coffee, Shirt, Camera, Phone, Shield, ArrowLeft, Heart, Share2 } from 'lucide-react';
 import Header from '@/components/Header';
 import ReviewSection from '@/components/ReviewSection';
+import LoginModal from '@/components/LoginModal';
+import RegisterModal from '@/components/RegisterModal';
 import { toast } from "sonner";
+import { useQuery } from '@tanstack/react-query';
+import { useFieldReviews } from '@/hooks/api/useReviews';
+import { useCreateReservation } from '@/hooks/api/useReservations';
 
 interface FieldDetailProps {
   user: any;
@@ -21,92 +25,102 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
-  // Mock data - in real app, this would come from API based on ID
-  const field = {
-    id: parseInt(id || '1'),
-    name: "Yeşilköy Spor Kompleksi",
-    location: "Yeşilköy Mah. Atatürk Cad. No:45, Bakırköy/İstanbul",
-    rating: 4.8,
-    reviewCount: 124,
-    pricePerHour: 250,
-    images: [
-      "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=800",
-      "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=800",
-      "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800",
-      "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800"
-    ],
-    amenities: [
-      { name: "Işıklı Saha", icon: Lightbulb, available: true },
-      { name: "Ücretsiz Park", icon: Car, available: true },
-      { name: "Ayakkabı Kiralama", icon: Shirt, available: true },
-      { name: "WiFi", icon: Wifi, available: true },
-      { name: "Kafeterya", icon: Coffee, available: true },
-      { name: "Güvenlik Kamerası", icon: Camera, available: true },
-      { name: "Soyunma Odası", icon: Users, available: true },
-      { name: "24/7 Güvenlik", icon: Shield, available: true }
-    ],
-    description: "Modern tesisleri ve geniş alanı ile futbol tutkunlarının tercihi olan halı sahamız, profesyonel kalitede zemin ve tam donanımlı tesisleri ile unutulmaz maçlar yaşamanızı sağlar.",
-    phone: "+90 212 555 0123",
-    workingHours: "06:00 - 02:00",
-    capacity: "10v10, 7v7, 5v5"
-  };
+  // Rezervasyon hook'u
+  const createReservationMutation = useCreateReservation();
 
-  const mockReviews = [
-    {
-      id: 1,
-      user: "Mehmet Yılmaz",
-      rating: 5,
-      comment: "Harika bir saha! Zemin kalitesi mükemmel ve tesisler çok temiz. Kesinlikle tavsiye ederim. Işıklandırma da çok iyi, gece maçları için ideal.",
-      date: "2024-01-15",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      helpful: 8,
-      notHelpful: 1,
-      verified: true
+  // Backend'den halı saha detayını çek
+  const { data: apiResponse, isLoading: fieldLoading, isError: fieldError } = useQuery({
+    queryKey: ['halisaha', id],
+    queryFn: async () => {
+      const res = await fetch(`http://192.168.1.33:5000/api/halisaha/${id}`);
+      if (!res.ok) throw new Error('Halı saha bulunamadı');
+      return res.json();
     },
-    {
-      id: 2,
-      user: "Ayşe Kara",
-      rating: 4,
-      comment: "Çok güzel bir kompleks. Park sorunu yok ve personel çok ilgili. Sadece kafeterya biraz pahalı. Genel olarak memnun kaldım.",
-      date: "2024-01-10",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b647?w=40&h=40&fit=crop&crop=face",
-      helpful: 5,
-      notHelpful: 0,
-      verified: true
-    },
-    {
-      id: 3,
-      user: "Can Demir",
-      rating: 5,
-      comment: "Arkadaşlarımla düzenli olarak geliyoruz. Rezervasyon sistemi çok kolay ve saha her zaman temiz. Soyunma odaları da çok düzenli.",
-      date: "2024-01-05",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-      helpful: 12,
-      notHelpful: 2,
-      verified: true
-    },
-    {
-      id: 4,
-      user: "Fatma Özkan",
-      rating: 3,
-      comment: "Saha güzel ama rezervasyon iptal politikası biraz sıkı. 2 saat öncesinden iptal etmek zorunda kalmak bazen zor oluyor.",
-      date: "2024-01-02",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-      helpful: 3,
-      notHelpful: 4,
-      verified: false
-    }
-  ];
+    enabled: !!id, // id varsa sorguyu çalıştır
+  });
+
+  // Gerçek field ID'yi al - sadece backend'den veli geldiğinde
+  const realFieldId = apiResponse?.data?.id;
+
+  // Backend'den reviews çek - sadece field ID hazır olduğunda
+  const { 
+    reviews: fieldReviews, 
+    rating: backendAverageRating, 
+    reviewCount: backendReviewCount, 
+    isLoading: reviewsLoading 
+  } = useFieldReviews(realFieldId || ''); // Empty string yerine realFieldId kullan, ama fallback olarak empty string
+
+  // Debug: Log review data
+  console.log('🏟️ FieldDetail review data:');
+  console.log('  - fieldId (URL):', id);
+  console.log('  - realFieldId (backend):', realFieldId);
+  console.log('  - fieldReviews:', fieldReviews);
+  console.log('  - backendAverageRating:', backendAverageRating);
+  console.log('  - backendReviewCount:', backendReviewCount);
+  console.log('  - reviewsLoading:', reviewsLoading);
+  console.log('  - fieldLoading:', fieldLoading);
+
+  // Toplam loading state - hem field hem reviews hazır olana kadar loading göster
+  const isLoading = fieldLoading || (realFieldId && reviewsLoading);
+
+  // Backend'den gelen veriyi frontend formatına çevir
+  const field = apiResponse?.data ? (() => {
+    const backendField = apiResponse.data;
+    
+    // Backend'den gelen gerçek rating ve review count kullan
+    const rating = backendAverageRating > 0 ? backendAverageRating : 0; // Fallback rating
+    const reviewCount = backendReviewCount > 0 ? backendReviewCount : 0;
+    
+    // Amenities'i backend verilerine göre oluştur
+    const amenities = [
+      { name: "Işıklı Saha", icon: Lightbulb, available: backendField.hasNightLighting },
+      { name: "Ücretsiz Park", icon: Car, available: backendField.hasParking },
+      { name: "Ayakkabı Kiralama", icon: Shirt, available: backendField.hasShoeRental },
+      { name: "WiFi", icon: Wifi, available: backendField.hasWifi || false },
+      { name: "Kafeterya", icon: Coffee, available: backendField.hasCafeteria },
+      { name: "Güvenlik Kamerası", icon: Camera, available: backendField.hasSecurity || false },
+      { name: "Soyunma Odası", icon: Users, available: backendField.hasShowers },
+      { name: "24/7 Güvenlik", icon: Shield, available: backendField.has24Security || false }
+    ];
+
+    console.log('🆔 Field ID comparison:');
+    console.log('  - URL ID:', id);
+    console.log('  - Backend ID:', backendField.id);
+    console.log('  - IDs match:', id === backendField.id);
+
+    return {
+      id: backendField.id, // Backend'den gelen gerçek ID kullan
+      name: backendField.name,
+      location: backendField.location,
+      rating: rating,
+      reviewCount: reviewCount,
+      pricePerHour: backendField.pricePerHour,
+      images: backendField.imagesUrl?.length > 0 ? backendField.imagesUrl : [
+        '/field-1.svg',
+        '/field-2.svg',
+        '/field-3.svg',
+        '/field-4.svg'
+      ], // Backend'den gelen tüm resimleri kullan
+      amenities: amenities,
+      description: backendField.description || "Modern tesisleri ve geniş alanı ile futbol tutkunlarının tercihi olan halı sahamız, profesyonel kalitede zemin ve tam donanımlı tesisleri ile unutulmaz maçlar yaşamanızı sağlar.",
+      phone: backendField.phone,
+      workingHours: `${backendField.startHour} - ${backendField.endHour}`,
+      capacity: `${backendField.maxPlayers} kişi - ${backendField.size} - ${backendField.surface}`
+    };
+  })() : null;
 
   const timeSlots = [
     "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00",
     "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
   ];
 
-  const bookedSlots = ["14:00", "18:00", "20:00"]; // Mock booked slots
+  // Backend'den gelen booked slots (şimdilik boş, ileride API'den çekilecek)
+  const bookedSlots = apiResponse?.data?.bookedSlots || [];
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!user) {
       toast.error("Rezervasyon yapmak için giriş yapmalısınız!");
       return;
@@ -117,7 +131,39 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
       return;
     }
     
-    toast.success(`Rezervasyon yapıldı!\nTarih: ${selectedDate.toLocaleDateString('tr-TR')}\nSaat: ${selectedTime}\nSaha: ${field.name}`);
+    if (!field) {
+      toast.error("Saha bilgileri yüklenemedi!");
+      return;
+    }
+
+    try {
+      // Tarih ve saati ISO string formatına çevir
+      const [hours, minutes] = selectedTime.split(':');
+      const reservationDateTime = new Date(selectedDate);
+      reservationDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+      const reservationData = {
+        userId: user.id,
+        haliSahaId: field.id.toString(),
+        status: 'pending' as const,
+        reservationDateTime: reservationDateTime.toISOString(),
+        isRecurring: false
+      };
+
+      console.log('🚀 Creating reservation:', reservationData);
+
+      await createReservationMutation.mutateAsync(reservationData);
+      
+      toast.success(`Rezervasyon başarıyla oluşturuldu!\nTarih: ${selectedDate.toLocaleDateString('tr-TR')}\nSaat: ${selectedTime}\nSaha: ${field.name}`);
+      
+      // Formu temizle
+      setSelectedDate(undefined);
+      setSelectedTime('');
+      
+    } catch (error: any) {
+      console.error('❌ Reservation creation failed:', error);
+      toast.error(error.message || "Rezervasyon oluşturulurken bir hata oluştu!");
+    }
   };
 
   const handleFavorite = () => {
@@ -129,12 +175,59 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
     toast.success(isFavorite ? "Favorilerden çıkarıldı" : "Favorilere eklendi");
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+        <Header 
+          user={user} 
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser(null)}
+        />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600">Halı saha bilgileri yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (fieldError || !field) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+        <Header 
+          user={user} 
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser(null)}
+        />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">😞</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Halı saha bulunamadı</h2>
+            <p className="text-gray-600 mb-6">Aradığınız halı saha mevcut değil veya kaldırılmış olabilir.</p>
+            <Button 
+              onClick={() => navigate('/fields')}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+            >
+              Tüm Sahalara Dön
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <Header 
         user={user} 
-        onLoginClick={() => {}}
-        onRegisterClick={() => {}}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
         onLogout={() => setUser(null)}
       />
       
@@ -249,7 +342,7 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {field.amenities.map((amenity, index) => (
+                  {field.amenities.filter(amenity => amenity.available).map((amenity, index) => (
                     <div key={index} className="group flex items-center gap-3 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:shadow-lg transition-all duration-300 hover:scale-105">
                       <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
                         <amenity.icon className="h-5 w-5 text-white" />
@@ -258,16 +351,19 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
                     </div>
                   ))}
                 </div>
+                {field.amenities.filter(amenity => amenity.available).length === 0 && (
+                  <p className="text-gray-500 text-center py-8">Bu sahada özel hizmet bulunmamaktadır.</p>
+                )}
               </CardContent>
             </Card>
 
             {/* Enhanced Reviews Section */}
             <ReviewSection
-              fieldId={field.id}
+              fieldId={field.id} // Backend'den gelen gerçek ID kullan
               fieldName={field.name}
-              averageRating={field.rating}
+              rating={field.rating}
               totalReviews={field.reviewCount}
-              reviews={mockReviews}
+              reviews={fieldReviews}
               isLoggedIn={!!user}
             />
           </div>
@@ -288,7 +384,11 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
                   {!user && (
                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
                       <p className="text-orange-800 font-medium mb-2">Rezervasyon yapmak için giriş yapın</p>
-                      <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
+                      <Button 
+                        size="sm" 
+                        onClick={() => setShowLogin(true)}
+                        className="bg-orange-500 hover:bg-orange-600"
+                      >
                         Giriş Yap
                       </Button>
                     </div>
@@ -368,10 +468,15 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
 
                   <Button 
                     onClick={handleBooking}
-                    disabled={!selectedDate || !selectedTime || !user}
+                    disabled={!selectedDate || !selectedTime || !user || createReservationMutation.isPending}
                     className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    {!user ? "Giriş Yapın" : "Rezervasyon Yap"}
+                    {createReservationMutation.isPending 
+                      ? "Rezervasyon Yapılıyor..." 
+                      : !user 
+                        ? "Giriş Yapın" 
+                        : "Rezervasyon Yap"
+                    }
                   </Button>
 
                   <p className="text-xs text-gray-500 text-center bg-gray-50 p-3 rounded-lg">
@@ -403,6 +508,28 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+        onLogin={setUser}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
+        }}
+        onRegister={setUser}
+      />
     </div>
   );
 };

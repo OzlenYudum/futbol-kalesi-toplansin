@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, Clock, Zap, Crown, Wifi, Car, Lightbulb, Users } from 'lucide-react';
+import { Star, MapPin, Clock, Zap, Crown, Wifi, Car, Lightbulb, Users, Shirt, Coffee } from 'lucide-react';
 
 interface FieldCardProps {
   field: {
-    id: number;
+    id: string | number;
     name: string;
     location: string;
     rating: number;
@@ -23,6 +23,8 @@ interface FieldCardProps {
       parking: boolean;
       wifi: boolean;
       locker: boolean;
+      shoeRental?: boolean;
+      cafeteria?: boolean;
     };
   };
 }
@@ -121,6 +123,18 @@ const FieldCard = ({ field }: FieldCardProps) => {
               <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded-md">
                 <Users className="h-3 w-3 text-orange-600" />
                 <span className="text-xs text-orange-700">Soyunma</span>
+              </div>
+            )}
+            {field.features.shoeRental && (
+              <div className="flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded-md">
+                <Shirt className="h-3 w-3 text-indigo-600" />
+                <span className="text-xs text-indigo-700">Ayakkabı</span>
+              </div>
+            )}
+            {field.features.cafeteria && (
+              <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-md">
+                <Coffee className="h-3 w-3 text-amber-600" />
+                <span className="text-xs text-amber-700">Kafeterya</span>
               </div>
             )}
           </div>

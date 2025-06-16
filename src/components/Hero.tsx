@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Calendar } from 'lucide-react';
+
 import { useNavigate } from 'react-router-dom';
 
 interface HeroProps {
@@ -52,41 +52,7 @@ const Hero = ({ onGetStarted }: HeroProps) => {
           </div>
         </div>
         
-        {/* Search Bar */}
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
-            <div className="grid md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input 
-                    type="text" 
-                    placeholder="Nerede oynamak istiyorsun?"
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input 
-                    type="date" 
-                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              </div>
-              <div>
-                <Button 
-                  onClick={() => navigate('/fields')}
-                  className="w-full h-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg"
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  Ara
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+
         
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-8 mt-16 text-center">

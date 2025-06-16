@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import Hero from '@/components/Hero';
 import FieldCard from '@/components/FieldCard';
 import LoginModal from '@/components/LoginModal';
 import RegisterModal from '@/components/RegisterModal';
+import { useQuery } from '@tanstack/react-query';
 
 interface IndexProps {
   user: any;
@@ -25,6 +25,18 @@ const Index = ({ user, setUser }: IndexProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Kullanıcı login yaptıysa Fields sayfasına yönlendir
+  useEffect(() => {
+    if (user) {
+      navigate('/fields');
+    }
+  }, [user, navigate]);
+
+  // Eğer kullanıcı login yaptıysa ana sayfa içeriğini gösterme
+  if (user) {
+    return null; // navigate çalışana kadar boş göster
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowAppBanner(true);
@@ -32,38 +44,54 @@ const Index = ({ user, setUser }: IndexProps) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const featuredFields = [
-    {
-      id: 1,
-      name: "Yeşilköy Spor Kompleksi",
-      location: "Yeşilköy, İstanbul",
-      rating: 4.8,
-      reviewCount: 124,
-      pricePerHour: 250,
-      image: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=400",
-      amenities: ["Ücretsiz Park", "Soyunma Odası", "Duş", "Kafeterya"]
+  // Öne çıkan halısahaları backend'den çek
+  const { data: apiResponse, isLoading, isError } = useQuery({
+    queryKey: ['halisahalar'],
+    queryFn: async () => {
+      const res = await fetch('http://192.168.1.33:5000/api/halisaha/');
+      if (!res.ok) throw new Error('Halı sahalar yüklenemedi');
+      return res.json();
     },
-    {
-      id: 2,
-      name: "Merkez Halı Saha",
-      location: "Şişli, İstanbul",
-      rating: 4.6,
-      reviewCount: 89,
-      pricePerHour: 200,
-      image: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=400",
-      amenities: ["Ücretsiz Park", "Soyunma Odası", "Duş"]
-    },
-    {
-      id: 3,
-      name: "Boğaziçi Sports Club",
-      location: "Beşiktaş, İstanbul",
-      rating: 4.9,
-      reviewCount: 156,
-      pricePerHour: 300,
-      image: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=400",
-      amenities: ["Ücretsiz Park", "Soyunma Odası", "Duş", "Kafeterya", "Lounge"]
-    }
-  ];
+  });
+  
+
+
+  // Backend'den gelen veriyi frontend formatına çevir
+  const allFields = apiResponse?.data?.map((field: any, index: number) => {
+    // Rating'i daha gerçekçi yap
+    
+    // Review count'u daha gerçekçi yap
+    
+    return {
+      id: field.id,
+      name: field.name,
+      location: field.location,
+      rating: field.rating,
+      reviewCount: field.reviewCount,
+      pricePerHour: field.pricePerHour,
+      image: field.imagesUrl?.[0] || '/field-1.svg', // Backend'den gelen ilk resmi kullan
+      amenities: [
+        field.surface,
+        `${field.maxPlayers} kişi`,
+        field.hasParking ? 'Park Yeri' : null,
+        field.hasShowers ? 'Duş' : null,
+        field.hasCafeteria ? 'Kafeterya' : null,
+        field.hasNightLighting ? 'Işıklı' : null,
+      ].filter(Boolean),
+      premium: field.pricePerHour > 250,
+      availability: field.availableSlots ? `${field.availableSlots} slot mevcut` : `${Math.floor(Math.random() * 10) + 1} slot mevcut`,
+      features: {
+        lighting: field.hasNightLighting,
+        parking: field.hasParking,
+        wifi: field.hasWifi || false,
+        locker: field.hasShowers,
+        shoeRental: field.hasShoeRental,
+        cafeteria: field.hasCafeteria,
+      }
+    };
+  }) || [];
+  
+  const featuredFields = allFields.slice(0, 3);
 
   const features = [
     {
@@ -129,7 +157,7 @@ const Index = ({ user, setUser }: IndexProps) => {
     setEmail('');
   };
 
-  const handleFieldClick = (fieldId: number) => {
+  const handleFieldClick = (fieldId: string | number) => {
     navigate(`/field/${fieldId}`);
   };
 
@@ -342,15 +370,21 @@ const Index = ({ user, setUser }: IndexProps) => {
               En popüler ve kaliteli halı sahaları keşfet
             </p>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {featuredFields.map((field, index) => (
-              <div key={field.id} className="group animate-fade-in cursor-pointer" style={{ animationDelay: `${index * 200}ms` }} onClick={() => handleFieldClick(field.id)}>
-                <FieldCard field={field} />
-              </div>
-            ))}
-          </div>
-          
+          {isLoading ? (
+            <div className="text-center text-lg text-gray-500 py-12">Yükleniyor...</div>
+          ) : isError ? (
+            <div className="text-center text-lg text-red-500 py-12">Halı sahalar yüklenemedi.</div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              {featuredFields && featuredFields.length > 0 ? featuredFields.map((field: any, index: number) => (
+                <div key={field.id} className="group animate-fade-in cursor-pointer" style={{ animationDelay: `${index * 200}ms` }} onClick={() => handleFieldClick(field.id)}>
+                  <FieldCard field={field} />
+                </div>
+              )) : (
+                <div className="col-span-3 text-center text-gray-500 py-12">Hiç halı saha bulunamadı.</div>
+              )}
+            </div>
+          )}
           <div className="text-center animate-fade-in">
             <Button 
               variant="outline" 

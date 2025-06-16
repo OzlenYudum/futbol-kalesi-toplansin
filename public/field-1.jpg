@@ -1,0 +1,49 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grassGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16a34a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#15803d;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="grassPattern" patternUnits="userSpaceOnUse" width="20" height="20">
+      <rect width="20" height="20" fill="url(#grassGradient1)"/>
+      <rect width="10" height="10" fill="#16a34a" opacity="0.3"/>
+    </pattern>
+  </defs>
+  
+  <!-- Sky background -->
+  <rect width="600" height="120" fill="#87ceeb"/>
+  
+  <!-- Field background -->
+  <rect y="120" width="600" height="280" fill="url(#grassPattern)"/>
+  
+  <!-- Field outline -->
+  <rect x="50" y="150" width="500" height="300" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Center line -->
+  <line x1="300" y1="150" x2="300" y2="450" stroke="white" stroke-width="3"/>
+  
+  <!-- Center circle -->
+  <circle cx="300" cy="300" r="60" fill="none" stroke="white" stroke-width="3"/>
+  <circle cx="300" cy="300" r="3" fill="white"/>
+  
+  <!-- Goals -->
+  <rect x="50" y="240" width="30" height="120" fill="none" stroke="white" stroke-width="3"/>
+  <rect x="520" y="240" width="30" height="120" fill="none" stroke="white" stroke-width="3"/>
+  
+  <!-- Goal areas -->
+  <rect x="50" y="210" width="80" height="180" fill="none" stroke="white" stroke-width="2"/>
+  <rect x="470" y="210" width="80" height="180" fill="none" stroke="white" stroke-width="2"/>
+  
+  <!-- Corner arcs -->
+  <path d="M 50 150 Q 65 150 65 165" fill="none" stroke="white" stroke-width="2"/>
+  <path d="M 550 150 Q 535 150 535 165" fill="none" stroke="white" stroke-width="2"/>
+  <path d="M 50 450 Q 65 450 65 435" fill="none" stroke="white" stroke-width="2"/>
+  <path d="M 550 450 Q 535 450 535 435" fill="none" stroke="white" stroke-width="2"/>
+  
+  <!-- Floodlights -->
+  <rect x="100" y="100" width="8" height="50" fill="#444"/>
+  <circle cx="104" cy="95" r="8" fill="#ffeb3b"/>
+  <rect x="500" y="100" width="8" height="50" fill="#444"/>
+  <circle cx="504" cy="95" r="8" fill="#ffeb3b"/>
+</svg> 

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -24,6 +26,8 @@ export default function LoginModal({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -33,7 +37,7 @@ export default function LoginModal({
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/login', {
+      const res = await fetch('http://192.168.1.33:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -47,12 +51,49 @@ export default function LoginModal({
         throw new Error(err.message || 'Giriş işlemi başarısız');
       }
 
-      const { user, token } = await res.json();
+      const response = await res.json();
+      console.log('Login response:', response); // Debug için
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.message || "Giriş işlemi başarısız");
+      }
+      
+      const data = response.data;
+      let user, token;
+      
+      // Backend response formatına göre user ve token'ı ayır
+      if (data.user && data.token) {
+        // Format 1: { data: { user: {...}, token: "..." } }
+        user = data.user;
+        token = data.token;
+      } else if (data.token) {
+        // Format 2: { data: { id, name, email, ..., token: "..." } }
+        const { token: extractedToken, ...userData } = data;
+        user = userData;
+        token = extractedToken;
+      } else {
+        throw new Error("Kullanıcı bilgileri alınamadı. Lütfen bilgilerinizi kontrol edin.");
+      }
+      
       localStorage.setItem('token', token);
       onLogin(user);
       onClose();
+      
+      // Başarılı giriş bildirimi
+      toast({
+        title: "Giriş Başarılı!",
+        description: `Hoş geldiniz, ${user.name}!`,
+        duration: 3000,
+      });
+
+      // Profil sayfasına yönlendirme
+      navigate('/profile');
     } catch (error: any) {
-      alert(error.message);
+      toast({
+        title: "Giriş Başarısız",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

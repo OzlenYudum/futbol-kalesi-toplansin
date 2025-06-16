@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -9,38 +8,63 @@ import { Star } from 'lucide-react';
 interface WriteReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (review: { rating: number; comment: string }) => void;
+  onSubmit: (review: { rating: number; comment: string }) => Promise<void>;
   fieldName: string;
+  initialData?: { rating: number; comment: string };
 }
 
-const WriteReviewModal = ({ isOpen, onClose, onSubmit, fieldName }: WriteReviewModalProps) => {
+const WriteReviewModal = ({ isOpen, onClose, onSubmit, fieldName, initialData }: WriteReviewModalProps) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setRating(initialData.rating);
+        setComment(initialData.comment);
+      } else {
+        // Reset form for new review
+        setRating(0);
+        setComment('');
+      }
+      setError('');
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📝 WriteReviewModal handleSubmit called');
+    console.log('Rating:', rating, 'Comment:', comment);
+    
     if (rating === 0) {
-      alert('Lütfen bir puan seçiniz!');
+      setError('Lütfen bir puan seçin.');
       return;
     }
-    if (comment.trim().length < 10) {
-      alert('Yorum en az 10 karakter olmalıdır!');
+    if (comment.trim() === '') {
+      setError('Lütfen yorumunuzu yazın.');
       return;
     }
 
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      onSubmit({ rating, comment: comment.trim() });
+    try {
+      console.log('🚀 Calling onSubmit with:', { rating, comment: comment.trim() });
+      await onSubmit({ rating, comment: comment.trim() });
+      
+      // Success - reset form
       setRating(0);
       setHoverRating(0);
       setComment('');
-      setLoading(false);
       onClose();
-    }, 1000);
+    } catch (error) {
+      console.error('❌ WriteReviewModal error:', error);
+      // Error handling - don't close modal, keep form data
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resetForm = () => {
@@ -60,12 +84,12 @@ const WriteReviewModal = ({ isOpen, onClose, onSubmit, fieldName }: WriteReviewM
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
             <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              Yorum Yaz
+              {initialData ? 'Yorumu Güncelle' : 'Yorum Yaz'}
             </span>
           </DialogTitle>
-          <p className="text-center text-gray-600 mt-2">
+          <DialogDescription className="text-center text-gray-600 mt-2">
             {fieldName} hakkında deneyiminizi paylaşın
-          </p>
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6 mt-4">

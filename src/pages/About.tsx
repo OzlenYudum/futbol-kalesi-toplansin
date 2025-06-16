@@ -1,9 +1,12 @@
-
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Target, Award, Heart, Shield, Clock, Star, Trophy } from 'lucide-react';
+import { Star, Users, Award, TrendingUp, Heart, Zap, Shield, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
+import LoginModal from '@/components/LoginModal';
+import RegisterModal from '@/components/RegisterModal';
 
 interface AboutProps {
   user: any;
@@ -11,33 +14,37 @@ interface AboutProps {
 }
 
 const About = ({ user, setUser }: AboutProps) => {
+  const navigate = useNavigate();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
   const stats = [
-    { icon: <Users className="h-8 w-8" />, number: "10,000+", label: "Aktif Kullanıcı" },
-    { icon: <Target className="h-8 w-8" />, number: "500+", label: "Halı Saha" },
-    { icon: <Award className="h-8 w-8" />, number: "50,000+", label: "Tamamlanan Rezervasyon" },
-    { icon: <Star className="h-8 w-8" />, number: "4.8", label: "Ortalama Puan" }
+    { icon: Users, label: "Aktif Kullanıcı", value: "50K+", color: "from-blue-500 to-cyan-500" },
+    { icon: Award, label: "Saha Partneri", value: "1000+", color: "from-green-500 to-emerald-500" },
+    { icon: TrendingUp, label: "Aylık Rezervasyon", value: "25K+", color: "from-purple-500 to-pink-500" },
+    { icon: Heart, label: "Memnuniyet Oranı", value: "98%", color: "from-red-500 to-rose-500" }
   ];
 
   const values = [
     {
-      icon: <Heart className="h-6 w-6" />,
-      title: "Müşteri Memnuniyeti",
-      description: "Kullanıcılarımızın memnuniyeti bizim en büyük önceliğimizdir."
+      icon: Zap,
+      title: "Hızlı ve Kolay",
+      description: "Birkaç tıkla rezervasyon yapın, anında onay alın."
     },
     {
-      icon: <Shield className="h-6 w-6" />,
-      title: "Güvenilirlik",
-      description: "Güvenli ödeme sistemi ve doğrulanmış sahalarla güven veriyoruz."
+      icon: Shield,
+      title: "Güvenilir",
+      description: "Doğrulanmış sahalar ve güvenli ödeme sistemi."
     },
     {
-      icon: <Clock className="h-6 w-6" />,
-      title: "Hızlı Hizmet",
-      description: "Anında rezervasyon ve 7/24 müşteri desteği sunuyoruz."
+      icon: Users,
+      title: "Topluluk Odaklı",
+      description: "Futbol severleri bir araya getiriyoruz."
     },
     {
-      icon: <Trophy className="h-6 w-6" />,
-      title: "Kalite",
-      description: "Sadece kaliteli ve donanımlı halı sahalar platformumuzda yer alır."
+      icon: Clock,
+      title: "7/24 Destek",
+      description: "Her zaman yanınızdayız, kesintisiz hizmet."
     }
   ];
 
@@ -45,20 +52,20 @@ const About = ({ user, setUser }: AboutProps) => {
     {
       name: "Ahmet Yılmaz",
       role: "Kurucu & CEO",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300",
-      description: "10+ yıl teknoloji sektöründe deneyim"
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200",
+      description: "10+ yıl teknoloji deneyimi"
     },
     {
-      name: "Elif Kaya",
+      name: "Ayşe Demir",
       role: "CTO",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b05b?w=300",
+      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200",
       description: "Yazılım geliştirme uzmanı"
     },
     {
-      name: "Murat Demir",
-      role: "Operasyon Müdürü",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-      description: "Saha ortaklıkları ve operasyon yönetimi"
+      name: "Mehmet Kaya",
+      role: "CMO",
+      image: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=200",
+      description: "Dijital pazarlama gururu"
     }
   ];
 
@@ -66,8 +73,8 @@ const About = ({ user, setUser }: AboutProps) => {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <Header 
         user={user} 
-        onLoginClick={() => {}}
-        onRegisterClick={() => {}}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
         onLogout={() => setUser(null)}
       />
       
@@ -98,10 +105,10 @@ const About = ({ user, setUser }: AboutProps) => {
             {stats.map((stat, index) => (
               <Card key={index} className="text-center hover:shadow-lg transition-shadow">
                 <CardContent className="pt-6">
-                  <div className="mx-auto w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white mb-4">
-                    {stat.icon}
+                  <div className={`mx-auto w-16 h-16 bg-gradient-to-r ${stat.color} rounded-full flex items-center justify-center text-white mb-4`}>
+                    <stat.icon className="h-8 w-8" />
                   </div>
-                  <div className="text-3xl font-bold text-green-600 mb-2">{stat.number}</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">{stat.value}</div>
                   <div className="text-gray-600">{stat.label}</div>
                 </CardContent>
               </Card>
@@ -149,7 +156,7 @@ const About = ({ user, setUser }: AboutProps) => {
               <Card key={index} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg flex items-center justify-center text-white mb-4">
-                    {value.icon}
+                    <value.icon className="h-6 w-6" />
                   </div>
                   <CardTitle className="text-lg">{value.title}</CardTitle>
                 </CardHeader>
@@ -210,6 +217,28 @@ const About = ({ user, setUser }: AboutProps) => {
           </div>
         </div>
       </section>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+        onLogin={setUser}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
+        }}
+        onRegister={setUser}
+      />
     </div>
   );
 };

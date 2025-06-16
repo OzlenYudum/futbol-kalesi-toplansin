@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, MapPin, Clock, Star, Edit, Camera, Bell, Shield, Heart, Download, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, Star, Edit, Camera, Bell, Shield, Heart, Download, ChevronRight, Loader2, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
+import ReservationCard from '@/components/ReservationCard';
+import LoginModal from '@/components/LoginModal';
+import RegisterModal from '@/components/RegisterModal';
+import { useUserReservations, useUpdateReservation } from '@/hooks/api/useReservations';
 
 interface ProfileProps {
   user: any;
@@ -29,61 +32,67 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
     email: true,
     sms: true
   });
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Rezervasyon hook'ları
+  const { data: reservations = [], isLoading: reservationsLoading, error: reservationsError } = useUserReservations();
+  const updateReservationMutation = useUpdateReservation();
 
-  const reservations = [
-    {
-      id: 1,
-      fieldName: "Yeşilköy Spor Kompleksi",
-      date: "2024-06-15",
-      time: "14:00 - 16:00",
-      price: 500,
-      status: "upcoming",
-      location: "Yeşilköy, İstanbul",
-      image: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=200"
-    },
-    {
-      id: 2,
-      fieldName: "Merkez Halı Saha",
-      date: "2024-06-10",
-      time: "18:00 - 20:00",
-      price: 400,
-      status: "completed",
-      location: "Şişli, İstanbul",
-      image: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=200"
-    },
-    {
-      id: 3,
-      fieldName: "Boğaziçi Sports Club",
-      date: "2024-06-05",
-      time: "20:00 - 22:00",
-      price: 600,
-      status: "completed",
-      location: "Beşiktaş, İstanbul",
-      image: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=200"
+  // Rezervasyon iptal etme
+  const handleCancelReservation = async (reservationId: string) => {
+    if (!user) {
+      toast({
+        title: "Hata",
+        description: "Rezervasyon iptal etmek için giriş yapmanız gerekiyor.",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
 
-  const favorites = [
-    {
-      id: 1,
-      name: "Yeşilköy Spor Kompleksi",
-      rating: 4.8,
-      pricePerHour: 250,
-      location: "Yeşilköy, İstanbul",
-      image: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=200"
-    },
-    {
-      id: 2,
-      name: "Boğaziçi Sports Club",
-      rating: 4.9,
-      pricePerHour: 300,
-      location: "Beşiktaş, İstanbul",
-      image: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=200"
+    // İptal edilecek rezervasyonu bul
+    const reservationToCancel = reservations.find(r => r.id === reservationId);
+    if (!reservationToCancel) {
+      toast({
+        title: "Hata",
+        description: "Rezervasyon bulunamadı.",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
+
+    try {
+      console.log('🚫 Cancelling reservation:', reservationId);
+
+      await updateReservationMutation.mutateAsync({
+        reservationId,
+        data: { status: 'cancelled' }
+      });
+      
+      toast({
+        title: "Başarılı!",
+        description: "Rezervasyonunuz başarıyla iptal edildi.",
+      });
+    } catch (error: any) {
+      console.error('❌ Cancel reservation error:', error);
+      toast({
+        title: "Hata",
+        description: error.message || "Rezervasyon iptal edilirken bir hata oluştu.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Rezervasyon detaylarını görüntüleme
+  const handleViewReservation = (reservationId: string) => {
+    navigate(`/reservation/${reservationId}`);
+  };
+
+  // Favorites will be implemented later with API
+  const favorites: any[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -119,11 +128,9 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
     });
   };
 
-  const handleReservationClick = (reservationId: number) => {
-    const reservation = reservations.find(r => r.id === reservationId);
-    if (reservation) {
-      navigate(`/field/${reservationId}`);
-    }
+  const handleReservationClick = (reservationId: string) => {
+    // Rezervasyon detaylarını görüntüle
+    handleViewReservation(reservationId);
   };
 
   const handleFavoriteClick = (fieldId: number) => {
@@ -146,8 +153,8 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
     <div className="min-h-screen bg-gray-50">
       <Header 
         user={user} 
-        onLoginClick={() => {}}
-        onRegisterClick={() => {}}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
         onLogout={onLogout}
       />
       
@@ -173,22 +180,12 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                 <p className="text-gray-600 mb-4">{user?.email}</p>
                 <div className="flex flex-wrap gap-2">
                   <Badge variant="secondary" className="animate-fade-in">
-                    {user?.role === 'owner' ? 'Saha Sahibi' : 'Oyuncu'}
+                    {user?.role === 'OWNER' ? 'Saha Sahibi' : 'Oyuncu'}
                   </Badge>
                   <Badge variant="outline" className="animate-fade-in" style={{ animationDelay: '100ms' }}>
                     Üye: {new Date().getFullYear()}
                   </Badge>
                 </div>
-              </div>
-              
-              <div className="text-center animate-fade-in" style={{ animationDelay: '200ms' }}>
-                <div className="text-2xl font-bold text-green-600">4.8</div>
-                <div className="flex justify-center mb-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star key={star} className="h-4 w-4 text-yellow-400 fill-current hover:scale-125 transition-transform" />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-600">Kullanıcı Puanı</p>
               </div>
             </div>
           </CardContent>
@@ -217,46 +214,46 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {reservations.map((reservation, index) => (
-                      <Card 
-                        key={reservation.id} 
-                        className="hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-fade-in"
-                        style={{ animationDelay: `${index * 100}ms` }}
-                        onClick={() => handleReservationClick(reservation.id)}
+                  {reservationsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+                      <span className="ml-2 text-gray-600">Rezervasyonlar yükleniyor...</span>
+                    </div>
+                  ) : reservationsError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-600 mb-2">Rezervasyonlar yüklenirken hata oluştu</div>
+                      <p className="text-gray-600 text-sm">Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin</p>
+                    </div>
+                  ) : reservations.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz rezervasyonunuz yok</h3>
+                      <p className="text-gray-600 mb-4">İlk rezervasyonunuzu yapmak için sahalar sayfasını ziyaret edin</p>
+                      <Button 
+                        onClick={() => navigate('/fields')}
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-4">
-                            <img 
-                              src={reservation.image} 
-                              alt={reservation.fieldName}
-                              className="w-16 h-16 rounded-lg object-cover hover:scale-110 transition-transform duration-300"
-                            />
-                            <div className="flex-1">
-                              <h4 className="font-semibold hover:text-green-600 transition-colors">{reservation.fieldName}</h4>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <MapPin className="h-4 w-4 mr-1" />
-                                {reservation.location}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-600 mt-1">
-                                <Clock className="h-4 w-4 mr-1" />
-                                {reservation.date} • {reservation.time}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge className={getStatusColor(reservation.status)}>
-                                {getStatusText(reservation.status)}
-                              </Badge>
-                              <div className="text-lg font-bold text-green-600 mt-2">
-                                ₺{reservation.price}
-                              </div>
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                        Sahalar Sayfasına Git
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reservations.map((reservation, index) => (
+                        <div 
+                          key={reservation.id}
+                          className="animate-fade-in"
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          <ReservationCard
+                            reservation={reservation}
+                            onCancel={handleCancelReservation}
+                            onUpdate={handleViewReservation}
+                            isLoading={updateReservationMutation.isPending}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -275,42 +272,56 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {favorites.map((field, index) => (
-                    <Card 
-                      key={field.id} 
-                      className="hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-fade-in"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                      onClick={() => handleFavoriteClick(field.id)}
+                {favorites.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz favori sahanız yok</h3>
+                    <p className="text-gray-600 mb-4">Beğendiğiniz sahaları favorilere ekleyerek hızlıca erişebilirsiniz</p>
+                    <Button 
+                      onClick={() => navigate('/fields')}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center space-x-4">
-                          <img 
-                            src={field.image} 
-                            alt={field.name}
-                            className="w-16 h-16 rounded-lg object-cover hover:scale-110 transition-transform duration-300"
-                          />
-                          <div className="flex-1">
-                            <h4 className="font-semibold hover:text-green-600 transition-colors">{field.name}</h4>
-                            <div className="flex items-center text-sm text-gray-600 mt-1">
-                              <MapPin className="h-4 w-4 mr-1" />
-                              {field.location}
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center">
-                                <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                                <span className="text-sm">{field.rating}</span>
+                      Sahalar Sayfasına Git
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {favorites.map((field, index) => (
+                      <Card 
+                        key={field.id} 
+                        className="hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-fade-in"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                        onClick={() => handleFavoriteClick(field.id)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-4">
+                            <img 
+                              src={field.image} 
+                              alt={field.name}
+                              className="w-16 h-16 rounded-lg object-cover hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-semibold hover:text-green-600 transition-colors">{field.name}</h4>
+                              <div className="flex items-center text-sm text-gray-600 mt-1">
+                                <MapPin className="h-4 w-4 mr-1" />
+                                {field.location}
                               </div>
-                              <div className="text-green-600 font-semibold">
-                                ₺{field.pricePerHour}/saat
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center">
+                                  <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                                  <span className="text-sm">{field.rating}</span>
+                                </div>
+                                <div className="text-green-600 font-semibold">
+                                  ₺{field.pricePerHour}/saat
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -415,30 +426,50 @@ const Profile = ({ user, onLogout }: ProfileProps) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { action: "Rezervasyon yapıldı", detail: "Yeşilköy Spor Kompleksi", time: "2 saat önce", icon: Calendar },
-                    { action: "Favori eklendi", detail: "Merkez Halı Saha", time: "1 gün önce", icon: Heart },
-                    { action: "Profil güncellendi", detail: "Telefon numarası değiştirildi", time: "3 gün önce", icon: Edit },
-                    { action: "Rezervasyon tamamlandı", detail: "Boğaziçi Sports Club", time: "1 hafta önce", icon: Star }
-                  ].map((activity, index) => (
-                    <div key={index} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-all animate-fade-in hover:scale-[1.02]" style={{ animationDelay: `${index * 100}ms` }}>
-                      <div className="p-2 bg-green-100 rounded-full">
-                        <activity.icon className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">{activity.action}</h4>
-                        <p className="text-sm text-gray-600">{activity.detail}</p>
-                      </div>
-                      <span className="text-sm text-gray-500">{activity.time}</span>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz aktivite geçmişiniz yok</h3>
+                  <p className="text-gray-600 mb-4">Rezervasyon yaptıkça aktiviteleriniz burada görünecek</p>
+                  <Button 
+                    onClick={() => navigate('/fields')}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                  >
+                    İlk Rezervasyonunuzu Yapın
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+        onLogin={(user) => {
+          // Bu durumda kullanıcı zaten giriş yapmış
+          setShowLogin(false);
+        }}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
+        }}
+        onRegister={(user) => {
+          // Bu durumda kullanıcı zaten giriş yapmış
+          setShowRegister(false);
+        }}
+      />
     </div>
   );
 };

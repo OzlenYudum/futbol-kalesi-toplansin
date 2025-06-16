@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,23 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Star, Plus, Filter, TrendingUp } from 'lucide-react';
 import ReviewCard from './ReviewCard';
 import WriteReviewModal from './WriteReviewModal';
-
-interface Review {
-  id: number;
-  user: string;
-  rating: number;
-  comment: string;
-  date: string;
-  avatar: string;
-  helpful: number;
-  notHelpful: number;
-  verified: boolean;
-}
+import { useCreateReview, useDeleteReview, useUpdateReview } from '@/hooks/api/useReviews';
+import { toast } from 'sonner';
+import { apiService } from '@/services/api';
+import { User, Review, UpdateReviewData } from '@/types';
 
 interface ReviewSectionProps {
-  fieldId: number;
+  fieldId: string; // Backend'de string ID kullanıyoruz
   fieldName: string;
-  averageRating: number;
+  rating: number;
   totalReviews: number;
   reviews: Review[];
   isLoggedIn?: boolean;
@@ -32,15 +23,30 @@ interface ReviewSectionProps {
 const ReviewSection = ({ 
   fieldId, 
   fieldName, 
-  averageRating, 
+  rating: averageRating, 
   totalReviews, 
   reviews: initialReviews,
   isLoggedIn = false 
 }: ReviewSectionProps) => {
   const [reviews, setReviews] = useState(initialReviews);
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [sortBy, setSortBy] = useState('newest');
   const [filterRating, setFilterRating] = useState('all');
+
+  // Backend review hooks
+  const createReviewMutation = useCreateReview();
+  const deleteReviewMutation = useDeleteReview();
+  const updateReviewMutation = useUpdateReview();
+
+  // Debug: Log received reviews
+  console.log('🎭 ReviewSection received props:');
+  console.log('  - fieldId:', fieldId);
+  console.log('  - fieldName:', fieldName);
+  console.log('  - averageRating:', averageRating);
+  console.log('  - totalReviews:', totalReviews);
+  console.log('  - initialReviews:', initialReviews);
+  console.log('  - current reviews state:', reviews);
 
   // Calculate rating distribution
   const ratingDistribution = [5, 4, 3, 2, 1].map(rating => {
@@ -49,23 +55,237 @@ const ReviewSection = ({
     return { rating, count, percentage };
   });
 
-  const handleAddReview = (newReview: { rating: number; comment: string }) => {
-    const review: Review = {
-      id: Date.now(),
-      user: "Kullanıcı", // In real app, this would come from user context
-      rating: newReview.rating,
-      comment: newReview.comment,
-      date: new Date().toISOString(),
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      helpful: 0,
-      notHelpful: 0,
-      verified: true
-    };
-    
-    setReviews(prev => [review, ...prev]);
+  const handleOpenWriteModal = () => {
+    setEditingReview(null);
+    setIsWriteModalOpen(true);
   };
 
-  const handleHelpful = (reviewId: number) => {
+  const handleOpenEditModal = (review: Review) => {
+    setEditingReview(review);
+    setIsWriteModalOpen(true);
+  };
+
+  const handleSubmitReview = async (data: { rating: number; comment: string }) => {
+    if (editingReview) {
+      // Güvenlik kontrolü - kullanıcı giriş yapmış mı?
+      const currentUser = apiService.getCurrentUser();
+      if (!currentUser) {
+        toast.error("Yorum güncellemek için giriş yapmanız gerekiyor.");
+        setIsWriteModalOpen(false);
+        return;
+      }
+
+      // Sahiplik kontrolü - bu kullanıcının yorumu mu?
+      if (editingReview.userId !== currentUser.id) {
+        toast.error("Sadece kendi yorumlarınızı güncelleyebilirsiniz.");
+        setIsWriteModalOpen(false);
+        return;
+      }
+
+      // WORKAROUND: Send all data the backend might require, to satisfy strict schema
+      const updateData = {
+        rating: data.rating,
+        comment: data.comment,
+        userId: editingReview.userId,
+        haliSahaId: editingReview.haliSahaId
+      };
+
+      // Optional: Check if anything actually changed to avoid unnecessary API calls
+      if (updateData.rating === editingReview.rating && updateData.comment === editingReview.comment) {
+        toast.info("Yorumda bir değişiklik yapmadınız.");
+        setIsWriteModalOpen(false);
+        return;
+      }
+
+      try {
+        await updateReviewMutation.mutateAsync({ reviewId: editingReview.id, data: updateData });
+        // Optimistic update
+        setReviews(prev => prev.map(r => r.id === editingReview.id ? { ...r, ...data } : r));
+        toast.success("Yorum başarıyla güncellendi.");
+      } catch (error: any) {
+        const errorMessage = error?.message || error?.response?.data?.message || "Yorum güncellenirken bir hata oluştu.";
+        toast.error(errorMessage);
+        console.error("Update review error:", error.response?.data || error);
+      }
+    } else {
+      // Create new review
+      handleAddReview(data);
+    }
+    setIsWriteModalOpen(false);
+  };
+
+  const handleAddReview = async (newReview: { rating: number; comment: string }) => {
+    console.log('🎯 handleAddReview called with:', newReview);
+    console.log('🏟️ fieldId:', fieldId);
+    
+    // 🔧 TOKEN DEBUG - Detaylı token kontrolü
+    console.log('=== TOKEN DEBUG START ===');
+    const token = localStorage.getItem('token');
+    console.log('1. Token exists:', !!token);
+    console.log('2. Token preview:', token ? `${token.substring(0, 50)}...` : 'null');
+    
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('3. Token payload:', payload);
+        console.log('4. Payload keys:', Object.keys(payload));
+        console.log('5. payload.id:', payload.id, 'type:', typeof payload.id);
+        console.log('6. payload.userId:', payload.userId, 'type:', typeof payload.userId);
+        console.log('7. payload.user?.id:', payload.user?.id, 'type:', typeof payload.user?.id);
+        
+        // Token expiry check
+        if (payload.exp) {
+          const now = Math.floor(Date.now() / 1000);
+          const isExpired = payload.exp < now;
+          console.log('8. Token exp:', payload.exp, 'now:', now, 'expired:', isExpired);
+        }
+      } catch (error) {
+        console.error('❌ Token parse error:', error);
+      }
+    }
+    console.log('=== TOKEN DEBUG END ===');
+    
+    if (!fieldId) {
+      console.error('❌ Field ID is missing');
+      toast.error('Halı saha bilgisi eksik. Sayfayı yenileyin.');
+      return;
+    }
+    
+    try {
+      // Current user'ı al
+      const currentUser = apiService.getCurrentUser();
+      console.log('🔍 Current user from apiService:', currentUser);
+      
+      if (!currentUser) {
+        console.error('❌ No current user found');
+        toast.error('Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+      
+      if (!currentUser.id) {
+        console.error('❌ User ID missing:', currentUser);
+        toast.error('Kullanıcı ID bilgisi eksik. Lütfen tekrar giriş yapın.');
+        return;
+      }
+
+      const reviewData = {
+        userId: currentUser.id,
+        haliSahaId: fieldId,
+        rating: parseInt(newReview.rating.toString()), // Backend Int bekliyor
+        comment: newReview.comment.trim() // Boşlukları temizle
+      };
+      
+      console.log('📋 Final review data to send:', reviewData);
+      console.log('📋 Review data types:', {
+        userId: typeof reviewData.userId,
+        haliSahaId: typeof reviewData.haliSahaId,
+        rating: typeof reviewData.rating,
+        comment: typeof reviewData.comment
+      });
+      
+      // Validation kontrolü (Backend Zod schema'ya göre)
+      if (!reviewData.comment || reviewData.comment.length < 1) {
+        toast.error('Yorum boş olamaz.');
+        return;
+      }
+      
+      if (reviewData.rating < 1 || reviewData.rating > 5) {
+        toast.error('Puan 1 ile 5 arasında olmalı.');
+        return;
+      }
+      
+      // UUID format kontrolü
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(reviewData.userId)) {
+        console.error('❌ Invalid userId format:', reviewData.userId);
+        toast.error('Kullanıcı ID formatı geçersiz.');
+        return;
+      }
+      
+      if (!uuidRegex.test(reviewData.haliSahaId)) {
+        console.error('❌ Invalid haliSahaId format:', reviewData.haliSahaId);
+        toast.error('Halı saha ID formatı geçersiz.');
+        return;
+      }
+      
+      console.log('📤 Sending review data:', reviewData);
+
+      // Backend'e yorum gönder
+      const result = await createReviewMutation.mutateAsync(reviewData);
+      console.log('✅ Review creation result:', result);
+
+      toast.success('Yorumunuz başarıyla eklendi!');
+      
+      // Replace the part where it adds to local state with the new logic
+      const tempReview: Review = {
+        id: result.id,
+        userId: result.userId,
+        haliSahaId: result.haliSahaId,
+        user: result.user?.name || currentUser.name,
+        rating: result.rating,
+        comment: result.comment,
+        date: new Date(result.createdAt).toLocaleDateString('tr-TR'),
+        avatar: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?w=40&h=40&fit=crop&crop=face`,
+        helpful: 0,
+        notHelpful: 0,
+        verified: true
+      };
+      
+      setReviews(prev => [tempReview, ...prev]);
+    } catch (error: any) {
+      console.error('❌ Review creation error:', error);
+      
+      // Detaylı hata mesajı
+      let errorMessage = 'Yorum eklenirken bir hata oluştu.';
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      console.error('Error details:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status
+      });
+      
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleDelete = async (reviewId: string) => {
+    // Güvenlik kontrolü - kullanıcı giriş yapmış mı?
+    const currentUser = apiService.getCurrentUser();
+    if (!currentUser) {
+      toast.error("Yorum silmek için giriş yapmanız gerekiyor.");
+      return;
+    }
+
+    // Sahiplik kontrolü - bu kullanıcının yorumu mu?
+    const reviewToDelete = reviews.find(r => r.id === reviewId);
+    if (!reviewToDelete) {
+      toast.error("Silinecek yorum bulunamadı.");
+      return;
+    }
+
+    if (reviewToDelete.userId !== currentUser.id) {
+      toast.error("Sadece kendi yorumlarınızı silebilirsiniz.");
+      return;
+    }
+
+    try {
+      await deleteReviewMutation.mutateAsync(reviewId);
+      setReviews(prev => prev.filter(review => review.id !== reviewId));
+      toast.success("Yorum başarıyla silindi.");
+    } catch (error: any) {
+      const errorMessage = error?.message || "Yorum silinirken bir hata oluştu.";
+      toast.error(errorMessage);
+      console.error("Delete review error:", error);
+    }
+  };
+
+  const handleHelpful = (reviewId: string) => {
     setReviews(prev => prev.map(review => 
       review.id === reviewId 
         ? { ...review, helpful: review.helpful + 1 }
@@ -73,13 +293,16 @@ const ReviewSection = ({
     ));
   };
 
-  const handleNotHelpful = (reviewId: number) => {
+  const handleNotHelpful = (reviewId: string) => {
     setReviews(prev => prev.map(review => 
       review.id === reviewId 
         ? { ...review, notHelpful: review.notHelpful + 1 }
         : review
     ));
   };
+
+  // Get current user for showing delete button
+  const currentUser = apiService.getCurrentUser();
 
   // Filter and sort reviews
   const filteredAndSortedReviews = reviews
@@ -110,7 +333,7 @@ const ReviewSection = ({
             <span>Değerlendirmeler ve Yorumlar</span>
             {isLoggedIn && (
               <Button 
-                onClick={() => setIsWriteModalOpen(true)}
+                onClick={handleOpenWriteModal}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -206,8 +429,11 @@ const ReviewSection = ({
             <ReviewCard
               key={review.id}
               review={review}
+              currentUser={currentUser}
               onHelpful={handleHelpful}
               onNotHelpful={handleNotHelpful}
+              onDelete={handleDelete}
+              onEdit={handleOpenEditModal}
             />
           ))
         ) : (
@@ -222,7 +448,7 @@ const ReviewSection = ({
               </p>
               {isLoggedIn && (
                 <Button 
-                  onClick={() => setIsWriteModalOpen(true)}
+                  onClick={handleOpenWriteModal}
                   className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
                 >
                   İlk Yorumu Yaz
@@ -237,8 +463,9 @@ const ReviewSection = ({
       <WriteReviewModal
         isOpen={isWriteModalOpen}
         onClose={() => setIsWriteModalOpen(false)}
-        onSubmit={handleAddReview}
+        onSubmit={handleSubmitReview}
         fieldName={fieldName}
+        initialData={editingReview ? { rating: editingReview.rating, comment: editingReview.comment } : undefined}
       />
     </div>
   );

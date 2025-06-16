@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,6 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
 import FieldCard from '@/components/FieldCard';
+import { useQuery } from '@tanstack/react-query';
+import { HaliSaha } from '@/types';
+import { transformBackendFieldsToCards } from '@/utils/fieldTransformers';
+import { normalizeText, compareTextsNormalized, matchesSearchTerm } from '@/utils/textUtils';
+import { CITY_DISTRICTS, CITIES } from '@/constants';
+import LoginModal from '@/components/LoginModal';
+import RegisterModal from '@/components/RegisterModal';
 
 interface FieldsProps {
   user: any;
@@ -33,166 +39,126 @@ const Fields = ({ user, setUser }: FieldsProps) => {
   const [sortBy, setSortBy] = useState('rating');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
-  const featuredFields = [
-    {
-      id: 1,
-      name: "Yeşilköy Spor Kompleksi",
-      location: "Yeşilköy, İstanbul",
-      rating: 4.8,
-      reviewCount: 124,
-      pricePerHour: 250,
-      image: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=400",
-      amenities: ["Işıklı Saha", "Ücretsiz Park", "Ayakkabı Kiralama", "Soyunma Odası", "Duş", "Kafeterya"],
-      features: {
-        lighting: true,
-        shoeRental: true,
-        parking: true,
-        wifi: true,
-        cafeteria: true,
-        locker: true
-      },
-      premium: true,
-      availability: "Bugün 5 slot boş"
+  // Seçilen şehre göre ilçeleri getir
+  const getDistrictsForCity = (city: string) => {
+    return CITY_DISTRICTS[city as keyof typeof CITY_DISTRICTS] || [];
+  };
+
+  // Backend'den tüm halı sahaları çek
+  const { data: apiResponse, isLoading, isError } = useQuery({
+    queryKey: ['halisahalar'],
+    queryFn: async () => {
+      const res = await fetch('http://192.168.1.33:5000/api/halisaha/');
+      if (!res.ok) throw new Error('Halı sahalar yüklenemedi');
+      const apiResponse = await res.json();
+      
+      console.log('🏟️ Backend response:', apiResponse);
+      console.log('🏟️ Backend response.data:', apiResponse.data);
+      
+      // Gelen ham veriyi merkezi transformer ile dönüştür
+      const transformedData = transformBackendFieldsToCards(apiResponse.data as HaliSaha[]);
+      console.log('🏟️ Transformed data:', transformedData);
+      
+      return transformedData;
     },
-    {
-      id: 2,
-      name: "Merkez Halı Saha",
-      location: "Şişli, İstanbul",
-      rating: 4.6,
-      reviewCount: 89,
-      pricePerHour: 200,
-      image: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=400",
-      amenities: ["Ücretsiz Park", "Soyunma Odası", "Duş", "WiFi"],
-      features: {
-        lighting: false,
-        shoeRental: false,
-        parking: true,
-        wifi: true,
-        cafeteria: false,
-        locker: true
-      },
-      premium: false,
-      availability: "Bugün 8 slot boş"
-    },
-    {
-      id: 3,
-      name: "Boğaziçi Sports Club",
-      location: "Beşiktaş, İstanbul",
-      rating: 4.9,
-      reviewCount: 156,
-      pricePerHour: 300,
-      image: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=400",
-      amenities: ["Işıklı Saha", "Ücretsiz Park", "Ayakkabı Kiralama", "Soyunma Odası", "Duş", "Kafeterya", "Lounge", "Güvenlik Kamerası"],
-      features: {
-        lighting: true,
-        shoeRental: true,
-        parking: true,
-        wifi: true,
-        cafeteria: true,
-        locker: true
-      },
-      premium: true,
-      availability: "Bugün 3 slot boş"
-    },
-    {
-      id: 4,
-      name: "Kadıköy Futbol Sahası",
-      location: "Kadıköy, İstanbul",
-      rating: 4.4,
-      reviewCount: 78,
-      pricePerHour: 180,
-      image: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=400",
-      amenities: ["Soyunma Odası", "Duş", "WiFi"],
-      features: {
-        lighting: false,
-        shoeRental: false,
-        parking: false,
-        wifi: true,
-        cafeteria: false,
-        locker: true
-      },
-      premium: false,
-      availability: "Bugün 12 slot boş"
-    },
-    {
-      id: 5,
-      name: "Ataşehir Premium Saha",
-      location: "Ataşehir, İstanbul",
-      rating: 4.7,
-      reviewCount: 203,
-      pricePerHour: 280,
-      image: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=400",
-      amenities: ["Işıklı Saha", "Ücretsiz Park", "Ayakkabı Kiralama", "Soyunma Odası", "Duş", "Kafeterya", "WiFi"],
-      features: {
-        lighting: true,
-        shoeRental: true,
-        parking: true,
-        wifi: true,
-        cafeteria: true,
-        locker: true
-      },
-      premium: true,
-      availability: "Bugün 7 slot boş"
-    },
-    {
-      id: 6,
-      name: "Üsküdar Halı Saha",
-      location: "Üsküdar, İstanbul",
-      rating: 4.3,
-      reviewCount: 67,
-      pricePerHour: 160,
-      image: "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=400",
-      amenities: ["Soyunma Odası", "Duş"],
-      features: {
-        lighting: false,
-        shoeRental: false,
-        parking: false,
-        wifi: false,
-        cafeteria: false,
-        locker: true
-      },
-      premium: false,
-      availability: "Bugün 15 slot boş"
+  });
+  
+  console.log('🏟️ Query result apiResponse:', apiResponse);
+  console.log('🏟️ apiResponse type:', typeof apiResponse);
+  console.log('🏟️ apiResponse is Array:', Array.isArray(apiResponse));
+  
+  // Backend'den gelen veriyi frontend formatına çevir - güvenli null check ile
+  const allFields = Array.isArray(apiResponse) ? apiResponse : [];
+  
+  console.log('🏟️ allFields:', allFields);
+  console.log('🏟️ allFields length:', allFields.length);
+
+  const featuredFields = allFields; // Artık tüm sahalar backend'den geliyor ve dönüştürülmüş
+
+  console.log('🏟️ featuredFields:', featuredFields);
+  console.log('🏟️ featuredFields type:', typeof featuredFields);
+  console.log('🏟️ featuredFields is Array:', Array.isArray(featuredFields));
+
+  // Güvenli filtreleme - data yoksa boş array kullan ve ekstra array kontrolü
+  const filteredFields = Array.isArray(featuredFields) ? featuredFields.filter(field => {
+    // Güvenlik kontrolü - field ve gerekli alanlar var mı?
+    if (!field || !field.name || !field.location) {
+      console.warn('⚠️ Invalid field data:', field);
+      return false;
     }
-  ];
 
-  const filteredFields = featuredFields.filter(field => {
-    const matchesSearch = field.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         field.location.toLowerCase().includes(searchTerm.toLowerCase());
+    // Arama terimi eşleştirmesi - Türkçe karakter desteği ile
+    const matchesSearch = matchesSearchTerm(field.name, searchTerm) ||
+                         matchesSearchTerm(field.location, searchTerm);
     
-    const matchesLighting = !filters.lighting || field.features.lighting;
-    const matchesShoeRental = !filters.shoeRental || field.features.shoeRental;
-    const matchesParking = !filters.parking || field.features.parking;
-    const matchesWifi = !filters.wifi || field.features.wifi;
-    const matchesCafeteria = !filters.cafeteria || field.features.cafeteria;
-    const matchesLocker = !filters.locker || field.features.locker;
+    // Şehir eşleştirmesi - hem value hem label ile kontrol et
+    let matchesCity = true;
+    if (filters.city) {
+      const selectedCity = CITIES.find(city => city.value === filters.city);
+      const cityLabel = selectedCity?.label || filters.city;
+      
+      matchesCity = compareTextsNormalized(field.location, filters.city) || 
+                   compareTextsNormalized(field.location, cityLabel);
+    }
+    
+    // İlçe eşleştirmesi - hem value hem label ile kontrol et
+    let matchesDistrict = true;
+    if (filters.district) {
+      const districts = getDistrictsForCity(filters.city);
+      const selectedDistrict = districts.find(district => district.value === filters.district);
+      const districtLabel = selectedDistrict?.label || filters.district;
+      
+      matchesDistrict = compareTextsNormalized(field.location, filters.district) || 
+                       compareTextsNormalized(field.location, districtLabel);
+    }
+    
+    // Features güvenlik kontrolü
+    const fieldFeatures = field.features || {} as any;
+    const matchesLighting = !filters.lighting || fieldFeatures.lighting;
+    const matchesShoeRental = !filters.shoeRental || fieldFeatures.shoeRental;
+    const matchesParking = !filters.parking || fieldFeatures.parking;
+    const matchesWifi = !filters.wifi || fieldFeatures.wifi;
+    const matchesCafeteria = !filters.cafeteria || fieldFeatures.cafeteria;
+    const matchesLocker = !filters.locker || fieldFeatures.locker;
     
     let matchesPrice = true;
-    if (filters.priceRange === 'low') matchesPrice = field.pricePerHour < 200;
-    else if (filters.priceRange === 'medium') matchesPrice = field.pricePerHour >= 200 && field.pricePerHour < 280;
-    else if (filters.priceRange === 'high') matchesPrice = field.pricePerHour >= 280;
+    const pricePerHour = field.pricePerHour || 0;
+    if (filters.priceRange === 'low') matchesPrice = pricePerHour < 200;
+    else if (filters.priceRange === 'medium') matchesPrice = pricePerHour >= 200 && pricePerHour < 280;
+    else if (filters.priceRange === 'high') matchesPrice = pricePerHour >= 280;
     
     let matchesRating = true;
-    if (filters.rating === '4+') matchesRating = field.rating >= 4.0;
-    else if (filters.rating === '4.5+') matchesRating = field.rating >= 4.5;
-    else if (filters.rating === '4.8+') matchesRating = field.rating >= 4.8;
+    const rating = field.rating || 0;
+    if (filters.rating === '4+') matchesRating = rating >= 4.0;
+    else if (filters.rating === '4.5+') matchesRating = rating >= 4.5;
+    else if (filters.rating === '4.8+') matchesRating = rating >= 4.8;
 
-    return matchesSearch && matchesLighting && matchesShoeRental && matchesParking && 
-           matchesWifi && matchesCafeteria && matchesLocker && matchesPrice && matchesRating;
+    return matchesSearch && matchesCity && matchesDistrict && matchesLighting && matchesShoeRental && 
+           matchesParking && matchesWifi && matchesCafeteria && matchesLocker && matchesPrice && matchesRating;
   }).sort((a, b) => {
+    // Null check ile güvenli sorting
+    const aPrice = a?.pricePerHour || 0;
+    const bPrice = b?.pricePerHour || 0;
+    const aRating = a?.rating || 0;
+    const bRating = b?.rating || 0;
+    const aReviewCount = a?.reviewCount || 0;
+    const bReviewCount = b?.reviewCount || 0;
+
     switch (sortBy) {
       case 'price-low':
-        return a.pricePerHour - b.pricePerHour;
+        return aPrice - bPrice;
       case 'price-high':
-        return b.pricePerHour - a.pricePerHour;
+        return bPrice - aPrice;
       case 'reviews':
-        return b.reviewCount - a.reviewCount;
+        return bReviewCount - aReviewCount;
       case 'rating':
       default:
-        return b.rating - a.rating;
+        return bRating - aRating;
     }
-  });
+  }) : [];
 
   const toggleFilter = (filterName: string) => {
     setFilters(prev => ({
@@ -222,16 +188,63 @@ const Fields = ({ user, setUser }: FieldsProps) => {
     });
   };
 
-  const handleFieldClick = (fieldId: number) => {
+  const handleFieldClick = (fieldId: string | number) => {
     navigate(`/field/${fieldId}`);
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+        <Header 
+          user={user} 
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser(null)}
+        />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600">Halı sahalar yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+        <Header 
+          user={user} 
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser(null)}
+        />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">😞</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Halı sahalar yüklenemedi</h2>
+            <p className="text-gray-600 mb-6">Bir hata oluştu. Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+            >
+              Sayfayı Yenile
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       <Header 
         user={user} 
-        onLoginClick={() => {}}
-        onRegisterClick={() => {}}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
         onLogout={() => setUser(null)}
       />
       
@@ -278,29 +291,38 @@ const Fields = ({ user, setUser }: FieldsProps) => {
 
             {/* Location Filters */}
             <div>
-              <Select value={filters.city} onValueChange={(value) => setFilters(prev => ({ ...prev, city: value }))}>
+              <Select 
+                value={filters.city} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, city: value, district: '' }))}
+              >
                 <SelectTrigger className="h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 transition-all hover:scale-105">
                   <SelectValue placeholder="Şehir seçin" />
                 </SelectTrigger>
                 <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
-                  <SelectItem value="istanbul">İstanbul</SelectItem>
-                  <SelectItem value="ankara">Ankara</SelectItem>
-                  <SelectItem value="izmir">İzmir</SelectItem>
+                  {CITIES.map((city) => (
+                    <SelectItem key={city.value} value={city.value}>
+                      {city.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Select value={filters.district} onValueChange={(value) => setFilters(prev => ({ ...prev, district: value }))}>
-                <SelectTrigger className="h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 transition-all hover:scale-105">
-                  <SelectValue placeholder="İlçe seçin" />
+              <Select 
+                value={filters.district} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, district: value }))}
+                disabled={!filters.city}
+              >
+                <SelectTrigger className={`h-14 text-lg border-2 border-gray-200 focus:border-green-500 rounded-xl bg-white/70 transition-all hover:scale-105 ${!filters.city ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <SelectValue placeholder={filters.city ? "İlçe seçin" : "Önce şehir seçin"} />
                 </SelectTrigger>
                 <SelectContent className="bg-white shadow-lg border rounded-lg z-50">
-                  <SelectItem value="besiktas">Beşiktaş</SelectItem>
-                  <SelectItem value="sisli">Şişli</SelectItem>
-                  <SelectItem value="kadikoy">Kadıköy</SelectItem>
-                  <SelectItem value="atasehir">Ataşehir</SelectItem>
-                  <SelectItem value="uskudar">Üsküdar</SelectItem>
+                  {getDistrictsForCity(filters.city).map((district) => (
+                    <SelectItem key={district.value} value={district.value}>
+                      {district.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -436,6 +458,28 @@ const Fields = ({ user, setUser }: FieldsProps) => {
           </div>
         )}
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+        onLogin={setUser}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
+        }}
+        onRegister={setUser}
+      />
     </div>
   );
 };

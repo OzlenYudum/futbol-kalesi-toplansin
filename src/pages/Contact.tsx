@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Mail, Clock, Send, MessageCircle, HelpCircle, Star, CheckCircle, Heart, Users } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, MessageCircle, HelpCircle, Star, CheckCircle, Heart, Users } from 'lucide-react';
 import Header from '@/components/Header';
+import LoginModal from '@/components/LoginModal';
+import RegisterModal from '@/components/RegisterModal';
+import { useToast } from "@/hooks/use-toast";
 
 interface ContactProps {
   user: any;
@@ -11,19 +13,9 @@ interface ContactProps {
 }
 
 const Contact = ({ user, setUser }: ContactProps) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submitted:', formData);
-    alert('Mesajınız gönderildi! En kısa sürede size dönüş yapacağız.');
-    setFormData({ name: '', email: '', subject: '', message: '' });
-  };
+  const { toast } = useToast();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
   const contactInfo = [
     {
@@ -103,8 +95,8 @@ const Contact = ({ user, setUser }: ContactProps) => {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
       <Header 
         user={user} 
-        onLoginClick={() => {}}
-        onRegisterClick={() => {}}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
         onLogout={() => setUser(null)}
       />
       
@@ -141,125 +133,51 @@ const Contact = ({ user, setUser }: ContactProps) => {
         </div>
       </section>
 
-      {/* Contact Info & Form */}
+      {/* Contact Info */}
       <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16">
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">İletişim Kanalları</h2>
-              <div className="space-y-6">
-                {contactInfo.map((info, index) => (
-                  <Card key={index} className="hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className={`w-14 h-14 bg-gradient-to-r ${info.gradient} rounded-xl flex items-center justify-center text-white flex-shrink-0`}>
-                          {info.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-gray-900 mb-2 text-lg">{info.title}</h3>
-                          <p className="text-gray-600 mb-3">{info.description}</p>
-                          {info.details.map((detail, idx) => (
-                            <p key={idx} className="text-gray-800 font-medium">{detail}</p>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Quick Actions */}
-              <div className="mt-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Hızlı İşlemler</h3>
-                <div className="space-y-4">
-                  <Button className="w-full justify-start bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white h-12">
-                    <MessageCircle className="mr-3 h-5 w-5" />
-                    Canlı Destek Başlat
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start border-2 border-green-500 text-green-600 hover:bg-green-50 h-12">
-                    <HelpCircle className="mr-3 h-5 w-5" />
-                    Sıkça Sorulan Sorular
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start border-2 border-blue-500 text-blue-600 hover:bg-blue-50 h-12">
-                    <Phone className="mr-3 h-5 w-5" />
-                    Telefon Desteği
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Form */}
-            <div>
-              <Card className="shadow-xl border-0">
-                <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
-                  <CardTitle className="text-2xl text-center">Mesaj Gönder</CardTitle>
-                  <p className="text-center opacity-90">Size 24 saat içinde dönüş yapacağız</p>
-                </CardHeader>
-                <CardContent className="p-8">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Ad Soyad *
-                        </label>
-                        <Input
-                          required
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Adınız ve soyadınız"
-                          className="h-12 focus:ring-2 focus:ring-green-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          E-posta *
-                        </label>
-                        <Input
-                          type="email"
-                          required
-                          value={formData.email}
-                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                          placeholder="ornek@email.com"
-                          className="h-12 focus:ring-2 focus:ring-green-500"
-                        />
-                      </div>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">İletişim Kanalları</h2>
+            <p className="text-xl text-gray-600">Size ulaşmanın en kolay yolları</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {contactInfo.map((info, index) => (
+              <Card key={index} className="hover:shadow-lg transition-all duration-300 border-0 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className={`w-14 h-14 bg-gradient-to-r ${info.gradient} rounded-xl flex items-center justify-center text-white flex-shrink-0`}>
+                      {info.icon}
                     </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Konu *
-                      </label>
-                      <Input
-                        required
-                        value={formData.subject}
-                        onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                        placeholder="Mesajınızın konusu"
-                        className="h-12 focus:ring-2 focus:ring-green-500"
-                      />
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg">{info.title}</h3>
+                      <p className="text-gray-600 mb-3">{info.description}</p>
+                      {info.details.map((detail, idx) => (
+                        <p key={idx} className="text-gray-800 font-medium">{detail}</p>
+                      ))}
                     </div>
-                    
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Mesaj *
-                      </label>
-                      <textarea
-                        required
-                        rows={6}
-                        value={formData.message}
-                        onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
-                        placeholder="Mesajınızı detaylı olarak yazın..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none"
-                      />
-                    </div>
-                    
-                    <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 h-12 text-lg font-semibold">
-                      <Send className="mr-2 h-5 w-5" />
-                      Mesaj Gönder
-                    </Button>
-                  </form>
+                  </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="max-w-2xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Hızlı İşlemler</h3>
+            <div className="grid md:grid-cols-3 gap-4">
+              <Button className="justify-center bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white h-14 flex-col">
+                <MessageCircle className="h-6 w-6 mb-1" />
+                <span className="text-sm">Canlı Destek</span>
+              </Button>
+              <Button variant="outline" className="justify-center border-2 border-green-500 text-green-600 hover:bg-green-50 h-14 flex-col">
+                <HelpCircle className="h-6 w-6 mb-1" />
+                <span className="text-sm">S.S.S</span>
+              </Button>
+              <Button variant="outline" className="justify-center border-2 border-blue-500 text-blue-600 hover:bg-blue-50 h-14 flex-col">
+                <Phone className="h-6 w-6 mb-1" />
+                <span className="text-sm">Telefon</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -312,13 +230,35 @@ const Contact = ({ user, setUser }: ContactProps) => {
               <MessageCircle className="mr-2 h-5 w-5" />
               Canlı Destek
             </Button>
-            <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 font-semibold">
+            <Button variant="outline" className="border-2 border-green-600 text-green-600 hover:bg-white hover:text-green-600 px-8 py-3 font-semibold">
               <Phone className="mr-2 h-5 w-5" />
               Bizi Arayın
             </Button>
           </div>
         </div>
       </section>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+        onLogin={setUser}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
+        }}
+        onRegister={setUser}
+      />
     </div>
   );
 };

@@ -1,0 +1,69 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grassGradient7" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#65a30d;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4d7c0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#365314;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mountainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b7280;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sky -->
+  <rect width="600" height="120" fill="#0ea5e9"/>
+  
+  <!-- Mountains -->
+  <polygon points="0,120 150,40 300,80 450,30 600,90 600,120" fill="url(#mountainGradient)"/>
+  <polygon points="100,120 200,60 350,70 500,45 600,85 600,120" fill="#4b5563" opacity="0.7"/>
+  
+  <!-- Snow caps -->
+  <polygon points="140,50 150,40 160,50" fill="white"/>
+  <polygon points="440,40 450,30 460,40" fill="white"/>
+  
+  <!-- Forest trees -->
+  <polygon points="20,120 30,90 40,120" fill="#166534"/>
+  <polygon points="60,120 70,85 80,120" fill="#15803d"/>
+  <polygon points="100,120 110,95 120,120" fill="#166534"/>
+  <polygon points="480,120 490,90 500,120" fill="#166534"/>
+  <polygon points="520,120 530,85 540,120" fill="#15803d"/>
+  <polygon points="560,120 570,95 580,120" fill="#166534"/>
+  
+  <!-- Field background -->
+  <rect y="120" width="600" height="280" fill="url(#grassGradient7)"/>
+  
+  <!-- Field outline -->
+  <rect x="100" y="150" width="400" height="220" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Center line -->
+  <line x1="300" y1="150" x2="300" y2="370" stroke="white" stroke-width="3"/>
+  
+  <!-- Center circle -->
+  <circle cx="300" cy="260" r="35" fill="none" stroke="white" stroke-width="3"/>
+  <circle cx="300" cy="260" r="2" fill="white"/>
+  
+  <!-- Goals -->
+  <rect x="100" y="225" width="15" height="70" fill="none" stroke="white" stroke-width="3"/>
+  <rect x="485" y="225" width="15" height="70" fill="none" stroke="white" stroke-width="3"/>
+  
+  <!-- Goal areas -->
+  <rect x="100" y="210" width="50" height="100" fill="none" stroke="white" stroke-width="2"/>
+  <rect x="450" y="210" width="50" height="100" fill="none" stroke="white" stroke-width="2"/>
+  
+  <!-- Wooden fence -->
+  <rect x="80" y="130" width="4" height="20" fill="#92400e"/>
+  <rect x="90" y="130" width="4" height="20" fill="#92400e"/>
+  <rect x="506" y="130" width="4" height="20" fill="#92400e"/>
+  <rect x="516" y="130" width="4" height="20" fill="#92400e"/>
+  <line x1="80" y1="135" x2="94" y2="135" stroke="#92400e" stroke-width="2"/>
+  <line x1="506" y1="135" x2="520" y2="135" stroke="#92400e" stroke-width="2"/>
+  
+  <!-- Eagles -->
+  <path d="M 250 80 Q 255 75 260 80" fill="none" stroke="#374151" stroke-width="2"/>
+  <path d="M 380 60 Q 385 55 390 60" fill="none" stroke="#374151" stroke-width="2"/>
+  
+  <!-- Clouds -->
+  <ellipse cx="120" cy="50" rx="25" ry="12" fill="white" opacity="0.8"/>
+  <ellipse cx="480" cy="40" rx="30" ry="15" fill="white" opacity="0.7"/>
+</svg> 

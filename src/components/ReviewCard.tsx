@@ -1,36 +1,52 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Star, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown, Trash2, Edit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-
-interface Review {
-  id: number;
-  user: string;
-  rating: number;
-  comment: string;
-  date: string;
-  avatar: string;
-  helpful: number;
-  notHelpful: number;
-  verified: boolean;
-}
+import { User, Review } from '@/types';
 
 interface ReviewCardProps {
   review: Review;
-  onHelpful?: (reviewId: number) => void;
-  onNotHelpful?: (reviewId: number) => void;
+  currentUser?: User | null;
+  onHelpful?: (reviewId: string) => void;
+  onNotHelpful?: (reviewId: string) => void;
+  onDelete?: (reviewId: string) => void;
+  onEdit?: (review: Review) => void;
 }
 
-const ReviewCard = ({ review, onHelpful, onNotHelpful }: ReviewCardProps) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+const ReviewCard = ({ review, currentUser, onHelpful, onNotHelpful, onDelete, onEdit }: ReviewCardProps) => {
+  const isOwner = currentUser && currentUser.id === review.userId;
+  const isLoggedIn = !!currentUser;
+
+  const handleDelete = () => {
+    if (!isLoggedIn) {
+      alert('Yorum silmek için giriş yapmanız gerekiyor.');
+      return;
+    }
+    
+    if (!isOwner) {
+      alert('Sadece kendi yorumlarınızı silebilirsiniz.');
+      return;
+    }
+    
+    if (confirm('Bu yorumu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')) {
+      onDelete?.(review.id);
+    }
+  };
+
+  const handleEdit = () => {
+    if (!isLoggedIn) {
+      alert('Yorum düzenlemek için giriş yapmanız gerekiyor.');
+      return;
+    }
+    
+    if (!isOwner) {
+      alert('Sadece kendi yorumlarınızı düzenleyebilirsiniz.');
+      return;
+    }
+    
+    onEdit?.(review);
   };
 
   return (
@@ -54,7 +70,7 @@ const ReviewCard = ({ review, onHelpful, onNotHelpful }: ReviewCardProps) => {
                   </Badge>
                 )}
               </div>
-              <span className="text-sm text-gray-500">{formatDate(review.date)}</span>
+              <span className="text-sm text-gray-500">{review.date}</span>
             </div>
             
             <div className="flex items-center gap-2 mb-3">
@@ -90,6 +106,31 @@ const ReviewCard = ({ review, onHelpful, onNotHelpful }: ReviewCardProps) => {
                 <ThumbsDown className="h-4 w-4 mr-1" />
                 Faydalı değil ({review.notHelpful})
               </Button>
+              
+              <div className="ml-auto flex items-center gap-2">
+                {isLoggedIn && isOwner && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleEdit}
+                      className="text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Güncelle
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleDelete}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Sil
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

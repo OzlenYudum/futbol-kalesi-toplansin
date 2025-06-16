@@ -3,8 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { Eye, EyeOff, Phone, Mail, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from "@/hooks/use-toast";
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -25,11 +27,13 @@ export default function RegisterModal({
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'user'
+    role: 'USER'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -38,13 +42,17 @@ export default function RegisterModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('Şifreler eşleşmiyor!');
+      toast({
+        title: "Hata",
+        description: "Şifreler eşleşmiyor!",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/register', {
+      const res = await fetch('http://192.168.1.33:5000/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -65,8 +73,20 @@ export default function RegisterModal({
       localStorage.setItem('token', token);
       onRegister(user);
       onClose();
+      
+      // Kayıt başarılı mesajı göster
+      toast({
+        title: "Kayıt Başarılı!",
+        description: `Kayıt işleminiz başarılı. Şimdi giriş yapabilirsiniz!`,
+        duration: 3000,
+      });
+      onSwitchToLogin(); // Login modalını aç
     } catch (error: any) {
-      alert(error.message);
+      toast({
+        title: "Kayıt Başarısız",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -132,23 +152,7 @@ export default function RegisterModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Hesap Türü</Label>
-            <RadioGroup
-              value={formData.role}
-              onValueChange={(value) => handleInputChange('role', value)}
-              className="flex space-x-6"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="user" id="user" className="text-green-600" />
-                <Label htmlFor="user" className="text-sm">Oyuncu</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="owner" id="owner" className="text-green-600" />
-                <Label htmlFor="owner" className="text-sm">Saha Sahibi</Label>
-              </div>
-            </RadioGroup>
-          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="password">Şifre</Label>

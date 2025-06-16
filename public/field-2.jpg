@@ -1,0 +1,53 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grassGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="roofGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b7280;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#374151;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Roof structure -->
+  <rect width="600" height="80" fill="url(#roofGradient)"/>
+  <rect x="0" y="70" width="600" height="10" fill="#1f2937"/>
+  
+  <!-- Support beams -->
+  <rect x="150" y="80" width="6" height="40" fill="#374151"/>
+  <rect x="300" y="80" width="6" height="40" fill="#374151"/>
+  <rect x="450" y="80" width="6" height="40" fill="#374151"/>
+  
+  <!-- Field background -->
+  <rect y="120" width="600" height="280" fill="url(#grassGradient2)"/>
+  
+  <!-- Field outline -->
+  <rect x="60" y="160" width="480" height="240" fill="none" stroke="white" stroke-width="4"/>
+  
+  <!-- Center line -->
+  <line x1="300" y1="160" x2="300" y2="400" stroke="white" stroke-width="3"/>
+  
+  <!-- Center circle -->
+  <circle cx="300" cy="280" r="50" fill="none" stroke="white" stroke-width="3"/>
+  <circle cx="300" cy="280" r="2" fill="white"/>
+  
+  <!-- Goals -->
+  <rect x="60" y="230" width="25" height="100" fill="none" stroke="white" stroke-width="3"/>
+  <rect x="515" y="230" width="25" height="100" fill="none" stroke="white" stroke-width="3"/>
+  
+  <!-- Goal areas -->
+  <rect x="60" y="210" width="70" height="140" fill="none" stroke="white" stroke-width="2"/>
+  <rect x="470" y="210" width="70" height="140" fill="none" stroke="white" stroke-width="2"/>
+  
+  <!-- Indoor lighting -->
+  <rect x="120" y="85" width="40" height="8" fill="#fbbf24" opacity="0.8"/>
+  <rect x="240" y="85" width="40" height="8" fill="#fbbf24" opacity="0.8"/>
+  <rect x="360" y="85" width="40" height="8" fill="#fbbf24" opacity="0.8"/>
+  <rect x="480" y="85" width="40" height="8" fill="#fbbf24" opacity="0.8"/>
+  
+  <!-- Walls -->
+  <rect x="0" y="120" width="20" height="280" fill="#4b5563"/>
+  <rect x="580" y="120" width="20" height="280" fill="#4b5563"/>
+</svg> 
