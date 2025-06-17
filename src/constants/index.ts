@@ -1,7 +1,7 @@
 import { CityDistricts } from '@/types';
 
-// API Configuration
-export const API_BASE_URL = 'http://192.168.1.158:5000/api';
+// API Configuration - Proxy kullanarak CORS sorununu çöz
+export const API_BASE_URL = '/api';
 
 export const API_ENDPOINTS = {
   LOGIN: '/login',
