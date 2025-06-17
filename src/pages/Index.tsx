@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Clock, Users, Shield, Zap, Trophy, Download, X, Smartphone, Apple, Play, ChevronRight, TrendingUp, Search, Calendar, Award, CheckCircle, ArrowRight, Heart, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import FieldCard from '@/components/FieldCard';
@@ -13,18 +14,26 @@ import RegisterModal from '@/components/RegisterModal';
 import { useQuery } from '@tanstack/react-query';
 import { API_BASE_URL, HOMEPAGE_FEATURES, HOMEPAGE_BENEFITS } from '@/constants';
 
-interface IndexProps {
-  user: any;
-  setUser: (user: any) => void;
-}
-
-const Index = ({ user, setUser }: IndexProps) => {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+const Index = () => {
   const [showAppBanner, setShowAppBanner] = useState(true);
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const {
+    user,
+    isLoading,
+    showLoginModal,
+    showRegisterModal,
+    openLoginModal,
+    openRegisterModal,
+    closeModals,
+    switchToLogin,
+    switchToRegister,
+    login,
+    register,
+    logout
+  } = useAuth();
 
   // Kullanıcı login yaptıysa Fields sayfasına yönlendir
   useEffect(() => {
