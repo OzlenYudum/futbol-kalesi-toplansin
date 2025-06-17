@@ -3,11 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Eye, EyeOff, Phone, Mail, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from '@/constants';
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -32,8 +30,8 @@ export default function RegisterModal({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  
+  const { register, loading } = useAuth(onRegister);
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
@@ -51,45 +49,17 @@ export default function RegisterModal({
       return;
     }
 
-    setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-          role: formData.role
-        })
+      await register({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.role
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Kayıt işlemi başarısız');
-      }
-
-      const { user, token } = await res.json();
-      localStorage.setItem('token', token);
-      onRegister(user);
       onClose();
-      
-      // Kayıt başarılı mesajı göster
-      toast({
-        title: "Kayıt Başarılı!",
-        description: `Kayıt işleminiz başarılı. Şimdi giriş yapabilirsiniz!`,
-        duration: 3000,
-      });
-      onSwitchToLogin(); // Login modalını aç
-    } catch (error: any) {
-      toast({
-        title: "Kayıt Başarısız",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      // Error handling done in useAuth hook
     }
   };
 

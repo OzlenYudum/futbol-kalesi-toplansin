@@ -4,9 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from '@/constants';
+import { useAuth } from '@/hooks/useAuth';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -26,9 +24,8 @@ export default function LoginModal({
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  
+  const { login, loading } = useAuth(onLogin);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -36,67 +33,14 @@ export default function LoginModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        })
+      await login({
+        email: formData.email,
+        password: formData.password
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Giriş işlemi başarısız');
-      }
-
-      const response = await res.json();
-      console.log('Login response:', response); // Debug için
-      
-      if (!response.success || !response.data) {
-        throw new Error(response.message || "Giriş işlemi başarısız");
-      }
-      
-      const data = response.data;
-      let user, token;
-      
-      // Backend response formatına göre user ve token'ı ayır
-      if (data.user && data.token) {
-        // Format 1: { data: { user: {...}, token: "..." } }
-        user = data.user;
-        token = data.token;
-      } else if (data.token) {
-        // Format 2: { data: { id, name, email, ..., token: "..." } }
-        const { token: extractedToken, ...userData } = data;
-        user = userData;
-        token = extractedToken;
-      } else {
-        throw new Error("Kullanıcı bilgileri alınamadı. Lütfen bilgilerinizi kontrol edin.");
-      }
-      
-      localStorage.setItem('token', token);
-      onLogin(user);
       onClose();
-      
-      // Başarılı giriş bildirimi
-      toast({
-        title: "Giriş Başarılı!",
-        description: `Hoş geldiniz, ${user.name}!`,
-        duration: 3000,
-      });
-
-      // Profil sayfasına yönlendirme
-      navigate('/profile');
-    } catch (error: any) {
-      toast({
-        title: "Giriş Başarısız",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      // Error handling done in useAuth hook
     }
   };
 

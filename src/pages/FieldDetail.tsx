@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,16 @@ import ReviewSection from '@/components/ReviewSection';
 import LoginModal from '@/components/LoginModal';
 import RegisterModal from '@/components/RegisterModal';
 import { toast } from "sonner";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFieldReviews } from '@/hooks/api/useReviews';
 import { useCreateReservation } from '@/hooks/api/useReservations';
 import { API_BASE_URL } from '@/constants';
+import { 
+  isSlotBooked, 
+  getBookedTimeSlotsForDate, 
+  validateReservationSlot, 
+  createReservationDateTime 
+} from '@/utils/reservationUtils';
 
 interface FieldDetailProps {
   user: any;
@@ -23,6 +29,7 @@ interface FieldDetailProps {
 const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState('');
   const [isFavorite, setIsFavorite] = useState(false);
@@ -33,7 +40,7 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
   const createReservationMutation = useCreateReservation();
 
   // Backend'den halı saha detayını çek
-  const { data: apiResponse, isLoading: fieldLoading, isError: fieldError } = useQuery({
+  const { data: apiResponse, isLoading: fieldLoading, isError: fieldError, refetch: refetchField } = useQuery({
     queryKey: ['halisaha', id],
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/halisaha/${id}`);
@@ -118,17 +125,18 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
     "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"
   ];
 
-  // Backend'den gelen booked slots (şimdilik boş, ileride API'den çekilecek)
+  // Backend'den gelen booked slots
   const bookedSlots = apiResponse?.data?.bookedSlots || [];
+
+  // Calculate booked time slots for the selected date
+  const bookedTimeSlotsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+    return getBookedTimeSlotsForDate(selectedDate, bookedSlots);
+  }, [selectedDate, bookedSlots]);
 
   const handleBooking = async () => {
     if (!user) {
       toast.error("Rezervasyon yapmak için giriş yapmalısınız!");
-      return;
-    }
-    
-    if (!selectedDate || !selectedTime) {
-      toast.error("Lütfen tarih ve saat seçiniz!");
       return;
     }
     
@@ -137,25 +145,41 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
       return;
     }
 
+    // Validate reservation slot
+    const validation = validateReservationSlot(selectedDate!, selectedTime, bookedSlots);
+    if (!validation.isValid) {
+      toast.error(validation.message!);
+      return;
+    }
+
     try {
-      // Tarih ve saati ISO string formatına çevir
-      const [hours, minutes] = selectedTime.split(':');
-      const reservationDateTime = new Date(selectedDate);
-      reservationDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      // Create reservation datetime using utility function
+      const reservationDateTime = createReservationDateTime(selectedDate!, selectedTime);
 
       const reservationData = {
         userId: user.id,
         haliSahaId: field.id.toString(),
         status: 'pending' as const,
-        reservationDateTime: reservationDateTime.toISOString(),
+        reservationDateTime,
         isRecurring: false
       };
 
       console.log('🚀 Creating reservation:', reservationData);
+      console.log('🔍 Validation passed for:', {
+        date: selectedDate?.toLocaleDateString('tr-TR'),
+        time: selectedTime,
+        bookedSlots: bookedTimeSlotsForSelectedDate
+      });
 
       await createReservationMutation.mutateAsync(reservationData);
       
-      toast.success(`Rezervasyon başarıyla oluşturuldu!\nTarih: ${selectedDate.toLocaleDateString('tr-TR')}\nSaat: ${selectedTime}\nSaha: ${field.name}`);
+      toast.success(`Rezervasyon başarıyla oluşturuldu!\nTarih: ${selectedDate!.toLocaleDateString('tr-TR')}\nSaat: ${selectedTime}\nSaha: ${field.name}`);
+      
+      // Refresh field data to get updated bookedSlots
+      await refetchField();
+      
+      // Also invalidate the field query in cache
+      queryClient.invalidateQueries({ queryKey: ['halisaha', id] });
       
       // Formu temizle
       setSelectedDate(undefined);
@@ -208,13 +232,10 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
         />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">😞</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Halı saha bulunamadı</h2>
-            <p className="text-gray-600 mb-6">Aradığınız halı saha mevcut değil veya kaldırılmış olabilir.</p>
-            <Button 
-              onClick={() => navigate('/fields')}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-            >
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Halı Saha Bulunamadı</h1>
+            <p className="text-lg text-gray-600 mb-8">Aradığınız halı saha bulunamadı veya mevcut değil.</p>
+            <Button onClick={() => navigate('/fields')} className="bg-green-600 hover:bg-green-700">
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Tüm Sahalara Dön
             </Button>
           </div>
@@ -231,110 +252,144 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
         onRegisterClick={() => setShowRegister(true)}
         onLogout={() => setUser(null)}
       />
-      
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/fields')}
-            className="flex items-center gap-2 text-gray-600 hover:text-green-600 hover:bg-green-50 transition-all duration-200"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Sahalara Dön
-          </Button>
-          <div className="flex gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleFavorite}
-              className={`transition-all duration-200 ${isFavorite ? "text-red-500 hover:text-red-600 bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
-            >
-              <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-green-600 hover:bg-green-50 transition-all duration-200">
-              <Share2 className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Enhanced Image Gallery */}
-            <div className="relative group">
-              <div className="grid grid-cols-4 gap-3 h-96 rounded-2xl overflow-hidden shadow-2xl">
-                <div className="col-span-2 row-span-2 relative overflow-hidden">
-                  <img 
-                    src={field.images[0]} 
-                    alt={field.name}
-                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-500 cursor-pointer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-                <div className="col-span-2 grid grid-cols-2 gap-3">
-                  {field.images.slice(1).map((image, index) => (
-                    <div key={index} className="relative overflow-hidden rounded-lg">
-                      <img 
-                        src={image} 
-                        alt={`${field.name} ${index + 2}`}
-                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-500 cursor-pointer"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                  ))}
+      {/* Enhanced Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600">
+        <div className="absolute inset-0 bg-black opacity-20"></div>
+        
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+          style={{ backgroundImage: `url(${field.images[0]})` }}
+        />
+        
+        <div className="relative max-w-7xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between">
+            <Button 
+              onClick={() => navigate(-1)} 
+              variant="outline" 
+              className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+            >
+              <ArrowLeft className="mr-2 h-5 w-5" />
+              Geri
+            </Button>
+            
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleFavorite}
+                variant="outline"
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+              >
+                <Heart className={`h-5 w-5 mr-2 ${isFavorite ? 'fill-current' : ''}`} />
+                {isFavorite ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+              >
+                <Share2 className="h-5 w-5 mr-2" />
+                Paylaş
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-8 grid lg:grid-cols-2 gap-8 items-center">
+            <div className="text-white space-y-6">
+              <div>
+                <h1 className="text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+                  {field.name}
+                </h1>
+                <div className="flex items-center space-x-4 text-lg">
+                  <div className="flex items-center space-x-1">
+                    <MapPin className="h-5 w-5" />
+                    <span>{field.location}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Star className="h-5 w-5 fill-current text-yellow-400" />
+                    <span>{field.rating.toFixed(1)}</span>
+                    <span className="text-white/80">({field.reviewCount} değerlendirme)</span>
+                  </div>
                 </div>
               </div>
-              <Badge className="absolute top-6 left-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 text-lg shadow-lg">
-                ₺{field.pricePerHour}/saat
-              </Badge>
-            </div>
 
-            {/* Enhanced Field Info */}
-            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-8">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex-1">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
-                      {field.name}
-                    </h1>
-                    <div className="space-y-3 text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-green-600" />
-                        <span className="text-lg">{field.location}</span>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-5 w-5 text-green-600" />
-                          <span>{field.phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-5 w-5 text-green-600" />
-                          <span>{field.workingHours}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-5 w-5 text-green-600" />
-                          <span>{field.capacity}</span>
-                        </div>
-                      </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3">
+                    <Clock className="h-6 w-6 text-emerald-200" />
+                    <div>
+                      <p className="text-sm text-white/80">Çalışma Saatleri</p>
+                      <p className="font-semibold">{field.workingHours}</p>
                     </div>
                   </div>
-                  <div className="text-right bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-2xl border border-yellow-200">
-                    <div className="flex items-center gap-2 mb-2 justify-end">
-                      <Star className="h-6 w-6 text-yellow-500 fill-current" />
-                      <span className="text-2xl font-bold text-gray-900">{field.rating}</span>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Users className="h-6 w-6 text-emerald-200" />
+                    <div>
+                      <p className="text-sm text-white/80">Kapasite</p>
+                      <p className="font-semibold">{field.capacity}</p>
                     </div>
-                    <span className="text-gray-600">({field.reviewCount} yorum)</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-6 w-6 text-emerald-200" />
+                    <div>
+                      <p className="text-sm text-white/80">İletişim</p>
+                      <p className="font-semibold">{field.phone}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Star className="h-6 w-6 text-emerald-200" />
+                    <div>
+                      <p className="text-sm text-white/80">Saatlik Ücret</p>
+                      <p className="text-2xl font-bold">₺{field.pricePerHour}</p>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <p className="text-gray-700 leading-relaxed text-lg bg-gray-50 p-6 rounded-xl border-l-4 border-green-500">
+            {/* Image Gallery */}
+            <div className="grid grid-cols-2 gap-4">
+              {field.images.slice(0, 4).map((image, index) => (
+                <div 
+                  key={index} 
+                  className="relative group overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                >
+                  <img 
+                    src={image} 
+                    alt={`${field.name} - Görüntü ${index + 1}`}
+                    className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Description */}
+            <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Saha Hakkında
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 leading-relaxed text-lg">
                   {field.description}
                 </p>
               </CardContent>
             </Card>
 
-            {/* Enhanced Amenities */}
+            {/* Features */}
             <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
@@ -415,28 +470,41 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
                       <label className="block text-sm font-semibold mb-3 text-gray-700">Saat Seçin</label>
                       <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto bg-gray-50 p-3 rounded-lg">
                         {timeSlots.map((time) => {
-                          const isBooked = bookedSlots.includes(time);
+                          const isBookedForDate = bookedTimeSlotsForSelectedDate.includes(time);
                           const isSelected = selectedTime === time;
                           return (
                             <Button
                               key={time}
                               variant={isSelected ? "default" : "outline"}
                               size="sm"
-                              disabled={isBooked}
+                              disabled={isBookedForDate}
                               onClick={() => setSelectedTime(time)}
                               className={`${
                                 isSelected 
                                   ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" 
-                                  : isBooked 
-                                    ? "opacity-50 cursor-not-allowed bg-red-100 text-red-600" 
+                                  : isBookedForDate 
+                                    ? "opacity-50 cursor-not-allowed bg-red-100 text-red-600 hover:bg-red-100" 
                                     : "hover:bg-green-50 hover:border-green-300"
                               } transition-all duration-200`}
+                              title={isBookedForDate ? `${time} saati rezerve edilmiş` : `${time} saati için rezervasyon yap`}
                             >
                               {time}
+                              {isBookedForDate && (
+                                <span className="ml-1 text-xs">✗</span>
+                              )}
                             </Button>
                           );
                         })}
                       </div>
+                      
+                      {/* Show booked slots info */}
+                      {bookedTimeSlotsForSelectedDate.length > 0 && (
+                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                          <p className="text-sm text-red-700">
+                            <strong>Dolu saatler:</strong> {bookedTimeSlotsForSelectedDate.join(', ')}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 

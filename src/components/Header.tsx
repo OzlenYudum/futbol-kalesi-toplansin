@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { User, Settings, LogOut, Menu, Home, MapPin, Info, MessageCircle, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from '@/hooks/useAuth';
 
 interface HeaderProps {
   user: any;
@@ -18,7 +18,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) 
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { toast } = useToast();
+  const { logout } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -40,18 +40,10 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) 
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('reviews-cache');
-    
     onLogout();
-    
-    toast({
-      title: "Çıkış Yapıldı",
-      description: "Hesabınızdan başarıyla çıkış yaptınız. Tüm verileriniz temizlendi.",
-      duration: 3000,
-    });
-    navigate('/');
+    logout();
   };
 
   return (

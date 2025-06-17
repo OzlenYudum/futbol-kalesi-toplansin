@@ -289,6 +289,35 @@ class ApiService {
     console.log('  - reservationDateTime parsed:', dateTest);
     console.log('  - is valid date:', !isNaN(dateTest.getTime()));
     console.log('  - ISO string format:', reservationData.reservationDateTime);
+
+    // Before sending to backend, let's fetch the field to check bookedSlots
+    console.log('🔍 Checking for slot conflicts before sending to backend...');
+    try {
+      const fieldResponse = await this.request<any>(`${API_ENDPOINTS.HALISAHA}/${reservationData.haliSahaId}`);
+      const bookedSlots = fieldResponse.data?.bookedSlots || [];
+      
+      // Check if the requested slot is already booked
+      const requestedDateTime = new Date(reservationData.reservationDateTime);
+      const isSlotBooked = bookedSlots.some((bookedSlot: string) => {
+        const bookedDateTime = new Date(bookedSlot);
+        return bookedDateTime.getTime() === requestedDateTime.getTime();
+      });
+
+      if (isSlotBooked) {
+        console.error('❌ Slot conflict detected:', {
+          requestedDateTime: reservationData.reservationDateTime,
+          bookedSlots
+        });
+        throw new Error('Bu tarih ve saat için zaten rezervasyon bulunmaktadır. Lütfen başka bir saat seçiniz.');
+      }
+      
+      console.log('✅ No slot conflicts detected, proceeding with reservation...');
+    } catch (error: any) {
+      if (error.message.includes('rezervasyon bulunmaktadır')) {
+        throw error; // Re-throw our custom conflict error
+      }
+      console.warn('⚠️ Could not verify slot conflicts, proceeding anyway:', error.message);
+    }
     
     return this.authenticatedRequest<Reservation>(API_ENDPOINTS.RESERVATION_CREATE, {
       method: 'POST',
