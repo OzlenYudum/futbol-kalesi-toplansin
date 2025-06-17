@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useQuery } from '@tanstack/react-query';
 import { useFieldReviews } from '@/hooks/api/useReviews';
 import { useCreateReservation } from '@/hooks/api/useReservations';
+import { API_BASE_URL } from '@/constants';
 
 interface FieldDetailProps {
   user: any;
@@ -35,7 +36,7 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
   const { data: apiResponse, isLoading: fieldLoading, isError: fieldError } = useQuery({
     queryKey: ['halisaha', id],
     queryFn: async () => {
-      const res = await fetch(`http://192.168.1.33:5000/api/halisaha/${id}`);
+      const res = await fetch(`${API_BASE_URL}/halisaha/${id}`);
       if (!res.ok) throw new Error('Halı saha bulunamadı');
       return res.json();
     },

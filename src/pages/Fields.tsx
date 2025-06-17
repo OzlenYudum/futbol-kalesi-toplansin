@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HaliSaha } from '@/types';
 import { transformBackendFieldsToCards } from '@/utils/fieldTransformers';
 import { normalizeText, compareTextsNormalized, matchesSearchTerm } from '@/utils/textUtils';
-import { CITY_DISTRICTS, CITIES } from '@/constants';
+import { CITY_DISTRICTS, CITIES, API_BASE_URL } from '@/constants';
 import LoginModal from '@/components/LoginModal';
 import RegisterModal from '@/components/RegisterModal';
 
@@ -51,7 +51,7 @@ const Fields = ({ user, setUser }: FieldsProps) => {
   const { data: apiResponse, isLoading, isError } = useQuery({
     queryKey: ['halisahalar'],
     queryFn: async () => {
-      const res = await fetch('http://192.168.1.33:5000/api/halisaha/');
+      const res = await fetch(`${API_BASE_URL}/halisaha/`);
       if (!res.ok) throw new Error('Halı sahalar yüklenemedi');
       const apiResponse = await res.json();
       

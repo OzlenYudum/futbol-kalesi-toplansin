@@ -1,7 +1,7 @@
 import { CityDistricts } from '@/types';
 
 // API Configuration
-export const API_BASE_URL = 'http://192.168.1.33:5000/api';
+export const API_BASE_URL = 'http://192.168.1.158:5000/api';
 
 export const API_ENDPOINTS = {
   LOGIN: '/login',
@@ -135,24 +135,28 @@ export const NAVIGATION_ITEMS = {
 // Features for Homepage
 export const HOMEPAGE_FEATURES = [
   {
-    title: "Hızlı Rezervasyon",
-    description: "Sadece birkaç tıkla istediğiniz saatte saha rezervasyonu yapın.",
-    gradient: "from-green-500 to-emerald-500"
+    title: "Anında Rezervasyon",
+    description: "Birkaç tıkla sahayı rezerve et, onayını hemen al",
+    gradient: "from-blue-500 to-cyan-500",
+    iconName: "Zap"
   },
   {
     title: "Güvenli Ödeme",
-    description: "SSL sertifikalı güvenli ödeme sistemi ile güvenle ödeme yapın.",
-    gradient: "from-blue-500 to-cyan-500"
-  },
-  {
-    title: "7/24 Destek",
-    description: "Herhangi bir sorunuzda 7/24 müşteri destek ekibimiz yanınızda.",
-    gradient: "from-purple-500 to-pink-500"
+    description: "256-bit SSL şifrelemesi ile güvenli ödeme sistemi",
+    gradient: "from-green-500 to-emerald-500",
+    iconName: "Shield"
   },
   {
     title: "Kaliteli Sahalar",
-    description: "Sadece kaliteli ve temiz sahalarla çalışıyoruz. Memnuniyetiniz garantili.",
-    gradient: "from-orange-500 to-red-500"
+    description: "Sadece kaliteli ve donanımlı halı sahalar platformumuzda",
+    gradient: "from-purple-500 to-pink-500",
+    iconName: "Trophy"
+  },
+  {
+    title: "7/24 Destek",
+    description: "Kesintisiz müşteri hizmetleri ile her zaman yanınızdayız",
+    gradient: "from-orange-500 to-red-500",
+    iconName: "Award"
   }
 ] as const;
 

@@ -11,6 +11,7 @@ import FieldCard from '@/components/FieldCard';
 import LoginModal from '@/components/LoginModal';
 import RegisterModal from '@/components/RegisterModal';
 import { useQuery } from '@tanstack/react-query';
+import { API_BASE_URL, HOMEPAGE_FEATURES, HOMEPAGE_BENEFITS } from '@/constants';
 
 interface IndexProps {
   user: any;
@@ -32,11 +33,6 @@ const Index = ({ user, setUser }: IndexProps) => {
     }
   }, [user, navigate]);
 
-  // Eğer kullanıcı login yaptıysa ana sayfa içeriğini gösterme
-  if (user) {
-    return null; // navigate çalışana kadar boş göster
-  }
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowAppBanner(true);
@@ -48,7 +44,7 @@ const Index = ({ user, setUser }: IndexProps) => {
   const { data: apiResponse, isLoading, isError } = useQuery({
     queryKey: ['halisahalar'],
     queryFn: async () => {
-      const res = await fetch('http://192.168.1.33:5000/api/halisaha/');
+      const res = await fetch(`${API_BASE_URL}/halisaha/`);
       if (!res.ok) throw new Error('Halı sahalar yüklenemedi');
       return res.json();
     },
@@ -93,41 +89,20 @@ const Index = ({ user, setUser }: IndexProps) => {
   
   const featuredFields = allFields.slice(0, 3);
 
-  const features = [
-    {
-      icon: <Zap className="h-8 w-8" />,
-      title: "Anında Rezervasyon",
-      description: "Birkaç tıkla sahayı rezerve et, onayını hemen al",
-      gradient: "from-blue-500 to-cyan-500"
-    },
-    {
-      icon: <Shield className="h-8 w-8" />,
-      title: "Güvenli Ödeme",
-      description: "256-bit SSL şifrelemesi ile güvenli ödeme sistemi",
-      gradient: "from-green-500 to-emerald-500"
-    },
-    {
-      icon: <Trophy className="h-8 w-8" />,
-      title: "Kaliteli Sahalar",
-      description: "Sadece kaliteli ve donanımlı halı sahalar platformumuzda",
-      gradient: "from-purple-500 to-pink-500"
-    },
-    {
-      icon: <Award className="h-8 w-8" />,
-      title: "7/24 Destek",
-      description: "Kesintisiz müşteri hizmetleri ile her zaman yanınızdayız",
-      gradient: "from-orange-500 to-red-500"
-    }
-  ];
+  // Icon mapping for features
+  const iconMap = {
+    Zap: <Zap className="h-8 w-8" />,
+    Shield: <Shield className="h-8 w-8" />,
+    Trophy: <Trophy className="h-8 w-8" />,
+    Award: <Award className="h-8 w-8" />
+  };
 
-  const benefits = [
-    "Anında onay alın",
-    "En uygun fiyatları bulun",
-    "Kolay iptal ve değişiklik",
-    "Arkadaşlarınızla paylaşın",
-    "Puanlama ve yorum yapın",
-    "Mobil uygulamada daha fazla avantaj"
-  ];
+  const features = HOMEPAGE_FEATURES.map(feature => ({
+    ...feature,
+    icon: iconMap[feature.iconName as keyof typeof iconMap]
+  }));
+
+  const benefits = HOMEPAGE_BENEFITS;
 
   const handleNewsletterSubscribe = () => {
     if (!email) {

@@ -3,23 +3,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Eye, EyeOff, Phone, Mail, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from "@/hooks/use-toast";
+
+interface RegisterData {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  role?: string;
+}
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin: () => void;
-  onRegister: (user: any) => void;
+  onRegister: (registerData: RegisterData) => Promise<{ success: boolean; error?: string }>;
+  isLoading: boolean;
 }
 
 export default function RegisterModal({
   isOpen,
   onClose,
   onSwitchToLogin,
-  onRegister
+  onRegister,
+  isLoading
 }: RegisterModalProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -31,9 +39,6 @@ export default function RegisterModal({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -41,54 +46,25 @@ export default function RegisterModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Hata",
-        description: "Şifreler eşleşmiyor!",
-        variant: "destructive",
+    const result = await onRegister({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+      confirmPassword: formData.confirmPassword,
+      role: formData.role
+    });
+    
+    if (result.success) {
+      // Reset form on successful registration
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+        role: 'USER'
       });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await fetch('http://192.168.1.33:5000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-          role: formData.role
-        })
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || 'Kayıt işlemi başarısız');
-      }
-
-      const { user, token } = await res.json();
-      localStorage.setItem('token', token);
-      onRegister(user);
-      onClose();
-      
-      // Kayıt başarılı mesajı göster
-      toast({
-        title: "Kayıt Başarılı!",
-        description: `Kayıt işleminiz başarılı. Şimdi giriş yapabilirsiniz!`,
-        duration: 3000,
-      });
-      onSwitchToLogin(); // Login modalını aç
-    } catch (error: any) {
-      toast({
-        title: "Kayıt Başarısız",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -117,6 +93,7 @@ export default function RegisterModal({
               onChange={(e) => handleInputChange('name', e.target.value)}
               required
               className="focus:ring-2 focus:ring-green-500"
+              disabled={isLoading}
             />
           </div>
 
@@ -133,6 +110,7 @@ export default function RegisterModal({
               onChange={(e) => handleInputChange('email', e.target.value)}
               required
               className="focus:ring-2 focus:ring-green-500"
+              disabled={isLoading}
             />
           </div>
 
@@ -149,10 +127,9 @@ export default function RegisterModal({
               onChange={(e) => handleInputChange('phone', e.target.value)}
               required
               className="focus:ring-2 focus:ring-green-500"
+              disabled={isLoading}
             />
           </div>
-
-
 
           <div className="space-y-2">
             <Label htmlFor="password">Şifre</Label>
@@ -166,6 +143,7 @@ export default function RegisterModal({
                 required
                 minLength={6}
                 className="focus:ring-2 focus:ring-green-500 pr-10"
+                disabled={isLoading}
               />
               <Button
                 type="button"
@@ -173,6 +151,7 @@ export default function RegisterModal({
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
               </Button>
@@ -190,6 +169,7 @@ export default function RegisterModal({
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                 required
                 className="focus:ring-2 focus:ring-green-500 pr-10"
+                disabled={isLoading}
               />
               <Button
                 type="button"
@@ -197,26 +177,19 @@ export default function RegisterModal({
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isLoading}
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center">
-            <input type="checkbox" required className="rounded border-gray-300" />
-            <span className="ml-2 text-sm text-gray-600">
-              <a href="#" className="text-green-600 hover:underline">Kullanım Şartları</a>'nı ve{' '}
-              <a href="#" className="text-green-600 hover:underline">Gizlilik Politikası</a>'nı kabul ediyorum
-            </span>
-          </div>
-
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-            disabled={loading}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+            disabled={isLoading}
           >
-            {loading ? 'Kayıt Oluşturuluyor…' : 'Kayıt Ol'}
+            {isLoading ? 'Kayıt Olunuyor…' : 'Kayıt Ol'}
           </Button>
         </form>
 
@@ -226,6 +199,7 @@ export default function RegisterModal({
             <button
               onClick={onSwitchToLogin}
               className="text-green-600 hover:underline font-medium"
+              disabled={isLoading}
             >
               Giriş Yap
             </button>
