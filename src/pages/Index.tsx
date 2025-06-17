@@ -50,7 +50,7 @@ const Index = () => {
   }, []);
 
   // Öne çıkan halısahaları backend'den çek
-  const { data: apiResponse, isLoading, isError } = useQuery({
+  const { data: apiResponse, isLoading: isFieldsLoading, isError } = useQuery({
     queryKey: ['halisahalar'],
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/halisaha/`);
