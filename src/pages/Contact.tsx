@@ -153,50 +153,35 @@ const Contact = ({ user, setUser }: ContactProps) => {
 
       {/* Contact Info */}
       <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">İletişim Kanalları</h2>
             <p className="text-xl text-gray-600">Size ulaşmanın en kolay yolları</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="grid md:grid-cols-3 gap-8 justify-items-center mb-12">
             {contactInfo.map((info, index) => (
-              <Card key={index} className="hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className={`w-14 h-14 bg-gradient-to-r ${info.gradient} rounded-xl flex items-center justify-center text-white flex-shrink-0`}>
-                      {info.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg">{info.title}</h3>
-                      <p className="text-gray-600 mb-3">{info.description}</p>
-                      {info.details.map((detail, idx) => (
-                        <p key={idx} className="text-gray-800 font-medium">{detail}</p>
-                      ))}
-                    </div>
+              <Card key={index} className="w-full max-w-lg border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-3xl bg-white/90 backdrop-blur-sm">
+                <CardContent className="p-10 flex flex-col items-center text-center space-y-4">
+                  <div className={`w-20 h-20 bg-gradient-to-br ${info.gradient} rounded-2xl flex items-center justify-center text-white text-3xl shadow-inner`}>
+                    {info.icon}
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-xl">
+                    {info.title}
+                  </h3>
+                  <p className="text-gray-600 text-base max-w-xs">
+                    {info.description}
+                  </p>
+                  <div className="space-y-1">
+                    {info.details.map((detail, idx) => (
+                      <p key={idx} className="text-gray-800 font-semibold">
+                        {detail}
+                      </p>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
-
-          {/* Quick Actions */}
-          <div className="max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Hızlı İşlemler</h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              <Button className="justify-center bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white h-14 flex-col">
-                <MessageCircle className="h-6 w-6 mb-1" />
-                <span className="text-sm">Canlı Destek</span>
-              </Button>
-              <Button variant="outline" className="justify-center border-2 border-green-500 text-green-600 hover:bg-green-50 h-14 flex-col">
-                <HelpCircle className="h-6 w-6 mb-1" />
-                <span className="text-sm">S.S.S</span>
-              </Button>
-              <Button variant="outline" className="justify-center border-2 border-blue-500 text-blue-600 hover:bg-blue-50 h-14 flex-col">
-                <Phone className="h-6 w-6 mb-1" />
-                <span className="text-sm">Telefon</span>
-              </Button>
-            </div>
           </div>
         </div>
       </section>
@@ -267,23 +252,21 @@ const Contact = ({ user, setUser }: ContactProps) => {
 
           <Accordion type="single" collapsible className="w-full space-y-4">
             {faqItems.map((item, index) => (
-              <AccordionItem key={index} value={`item-${index}`} className="border border-gray-200 rounded-xl overflow-hidden shadow-md">
-                <AccordionTrigger className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 text-lg font-medium text-gray-800">
-                  {item.question}
+              <AccordionItem
+                key={index}
+                value={`item-${index}`}
+                className="bg-gray-50 rounded-2xl shadow-lg border border-transparent hover:border-emerald-200 transition-colors"
+              >
+                <AccordionTrigger className="px-6 py-4 flex items-center gap-3 text-lg font-semibold text-gray-800">
+                  <HelpCircle className="h-5 w-5 text-emerald-600" />
+                  <span>{item.question}</span>
                 </AccordionTrigger>
-                <AccordionContent className="bg-white px-6 pb-6 text-gray-700 leading-relaxed">
+                <AccordionContent className="px-6 pb-6 pt-0 text-gray-700 leading-relaxed bg-white">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-
-          <div className="text-center mt-12">
-            <p className="text-gray-600 mb-4">Sorunuz burada yok mu?</p>
-            <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3">
-              Canlı Destek Başlat
-            </Button>
-          </div>
         </div>
       </section>
 

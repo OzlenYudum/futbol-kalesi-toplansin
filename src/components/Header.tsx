@@ -80,23 +80,24 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) 
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:scale-105 transition-transform">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.avatar} alt={user.name} />
-                      <AvatarFallback className="bg-gradient-to-r from-green-500 to-emerald-600 text-white">
-                        {user.name?.charAt(0) || 'U'}
+                  <Button variant="ghost" className="relative h-11 w-11 rounded-full p-0 group">
+                    <Avatar className="h-11 w-11 transition-transform duration-300 group-hover:scale-110">
+                      <AvatarImage src={user.avatar} alt={user.name} className="rounded-full object-cover" />
+                      <AvatarFallback className="rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white font-semibold text-lg">
+                        {user.name?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
+                    <span className="absolute inset-0 rounded-full border-2 border-transparent group-hover:border-emerald-500 transition-all duration-300" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-white shadow-lg border rounded-lg z-50" align="end">
-                  <div className="px-4 py-2 border-b">
-                    <p className="text-sm font-medium">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
+                <DropdownMenuContent className="w-60 bg-white/95 backdrop-blur-lg border-gray-200 shadow-2xl rounded-xl z-50 mt-2" align="end">
+                  <div className="px-4 py-3 border-b border-gray-200/80">
+                    <p className="text-sm font-bold text-gray-800 truncate">{user.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
                   </div>
                   
                   <DropdownMenuItem 
-                    className="flex items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 cursor-pointer p-3 text-sm text-gray-700 hover:bg-green-50/80 hover:text-green-700 transition-colors"
                     onClick={() => handleNavigation('/profile')}
                   >
                     <User className="mr-2 h-4 w-4" />
@@ -105,7 +106,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) 
 
                   {user.role === 'OWNER' && (
                     <DropdownMenuItem 
-                      className="flex items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 cursor-pointer p-3 text-sm text-gray-700 hover:bg-green-50/80 hover:text-green-700 transition-colors"
                       onClick={() => handleNavigation('/my-fields')}
                     >
                       <MapPin className="mr-2 h-4 w-4" />
@@ -114,7 +115,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) 
                   )}
 
                   <DropdownMenuItem 
-                    className="flex items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-3 cursor-pointer p-3 text-sm text-gray-700 hover:bg-green-50/80 hover:text-green-700 transition-colors"
                     onClick={() => handleNavigation('/settings')}
                   >
                     <Settings className="mr-2 h-4 w-4" />
@@ -123,7 +124,7 @@ const Header = ({ user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) 
 
                   <DropdownMenuItem 
                     onClick={handleLogout} 
-                    className="flex items-center text-red-600 cursor-pointer hover:bg-red-50 transition-colors"
+                    className="flex items-center gap-3 cursor-pointer p-3 text-sm text-red-500 hover:bg-red-50/80 hover:text-red-600 transition-colors"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Çıkış Yap</span>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, Users, Award, TrendingUp, Heart, Zap, Shield, Clock } from 'lucide-react';
+import { Star, Users, Award, TrendingUp, Heart, Zap, Shield, Clock, Linkedin, Twitter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import LoginModal from '@/components/LoginModal';
@@ -50,23 +50,26 @@ const About = ({ user, setUser }: AboutProps) => {
 
   const team = [
     {
-      name: "Ahmet Yılmaz",
+      name: "Özlen Yudum Besleme",
       role: "Kurucu & CEO",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200",
-      description: "10+ yıl teknoloji deneyimi"
+      image: "/image1.png",
+      description: "10+ yıl teknoloji deneyimi",
+      socials: {
+        linkedin: "#",
+        twitter: "#",
+      }
     },
     {
-      name: "Ayşe Demir",
-      role: "CTO",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200",
-      description: "Yazılım geliştirme uzmanı"
+      name: "Cem Barış Özden",
+      role: "Kurucu & CTO",
+      image: "/image2.jpg",
+      description: "Yazılım geliştirme uzmanı",
+      socials: {
+        linkedin: "#",
+        twitter: "#",
+      }
     },
-    {
-      name: "Mehmet Kaya",
-      role: "CMO",
-      image: "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?w=200",
-      description: "Dijital pazarlama gururu"
-    }
+   
   ];
 
   return (
@@ -176,18 +179,30 @@ const About = ({ user, setUser }: AboutProps) => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Takımımız</h2>
             <p className="text-lg text-gray-600">Toplansın'ı hayata geçiren ekip</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-12 justify-center max-w-2xl mx-auto">
             {team.map((member, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <img 
-                    src={member.image} 
-                    alt={member.name}
-                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                  />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{member.name}</h3>
-                  <Badge variant="secondary" className="mb-3">{member.role}</Badge>
-                  <p className="text-gray-600">{member.description}</p>
+              <Card key={index} className="group relative text-center rounded-3xl border-0 shadow-lg bg-white overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <CardContent className="p-8">
+                  <div className="relative inline-block mb-5 p-1 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600">
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className={`w-32 h-32 rounded-full object-cover ring-4 ring-white ${member.name === 'Cem Barış Özden' ? 'object-top' : ''}`}
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-1">{member.name}</h3>
+                  <p className="font-semibold text-emerald-600 mb-3">{member.role}</p>
+                  <p className="text-gray-500 text-sm px-4">{member.description}</p>
+                  
+                  <div className="mt-4 flex justify-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <a href={member.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-emerald-600">
+                      <Linkedin size={20} />
+                    </a>
+                    <a href={member.socials.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-emerald-600">
+                      <Twitter size={20} />
+                    </a>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -196,24 +211,22 @@ const About = ({ user, setUser }: AboutProps) => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-12 text-white">
-            <h2 className="text-3xl font-bold mb-4">Toplansın Ailesine Katıl!</h2>
-            <p className="text-lg mb-8 opacity-90">
-              Sen de bu büyük ailenin bir parçası ol ve en iyi halı sahaları keşfet.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Badge variant="secondary" className="text-green-600 text-lg px-6 py-3">
-                Ücretsiz Üyelik
-              </Badge>
-              <Badge variant="secondary" className="text-green-600 text-lg px-6 py-3">
-                Anında Rezervasyon
-              </Badge>
-              <Badge variant="secondary" className="text-green-600 text-lg px-6 py-3">
-                Güvenli Ödeme
-              </Badge>
-            </div>
+      <section className="py-20 bg-gradient-to-r from-green-500 to-emerald-600">
+        <div className="max-w-4xl mx-auto text-center px-4 text-white">
+          <h2 className="text-3xl font-bold mb-4">Toplansın Ailesine Katıl!</h2>
+          <p className="text-lg mb-8 opacity-90">
+            Sen de bu büyük ailenin bir parçası ol ve en iyi halı sahaları keşfet.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Badge variant="secondary" className="text-green-600 text-lg px-6 py-3">
+              Ücretsiz Üyelik
+            </Badge>
+            <Badge variant="secondary" className="text-green-600 text-lg px-6 py-3">
+              Anında Rezervasyon
+            </Badge>
+            <Badge variant="secondary" className="text-green-600 text-lg px-6 py-3">
+              Güvenli Ödeme
+            </Badge>
           </div>
         </div>
       </section>
