@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Phone, Mail, Clock, MessageCircle, HelpCircle, Star, CheckCircle, Heart, Users } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, MessageCircle, HelpCircle, Star, CheckCircle, Heart, Users, Send, Map } from 'lucide-react';
 import Header from '@/components/Header';
 import LoginModal from '@/components/LoginModal';
 import RegisterModal from '@/components/RegisterModal';
 import { useToast } from "@/hooks/use-toast";
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 interface ContactProps {
   user: any;
@@ -16,6 +19,21 @@ const Contact = ({ user, setUser }: ContactProps) => {
   const { toast } = useToast();
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) {
+      toast({ title: 'Lütfen tüm alanları doldurun', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Mesajınız gönderildi!', description: 'En kısa sürede sizinle iletişime geçeceğiz.' });
+    setFormData({ name: '', email: '', message: '' });
+  };
 
   const contactInfo = [
     {
@@ -183,7 +201,61 @@ const Contact = ({ user, setUser }: ContactProps) => {
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* Contact Form & Map */}
+      <section className="py-20 px-4 bg-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-transparent to-emerald-50" />
+        <div className="max-w-6xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12">
+          {/* Map */}
+          <div className="rounded-3xl overflow-hidden shadow-xl border border-green-100">
+            <iframe
+              title="Toplansın Konum"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3009.1963418194416!2d29.101019376336063!3d41.01525051997202!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caad4b9f3845ab%3A0x52b0fe8c305a05!2sAta%C5%9Fehir%2C%20%C4%B0stanbul!5e0!3m2!1str!2str!4v1710000000000!5m2!1str!2str"
+              loading="lazy"
+              className="w-full h-full min-h-[350px] grayscale hover:grayscale-0 transition-all duration-300"
+            />
+          </div>
+
+          {/* Form */}
+          <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/80">
+            <CardHeader>
+              <CardTitle className="text-2xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent flex items-center gap-2">
+                <Send className="h-6 w-6" /> İletişim Formu
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Input
+                    placeholder="Adınız"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    placeholder="E-posta"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+                <Textarea
+                  placeholder="Mesajınız"
+                  name="message"
+                  rows={6}
+                  value={formData.message}
+                  onChange={handleChange}
+                />
+                <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 text-lg font-semibold shadow-lg">
+                  Gönder
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* FAQ Section (Accordion) */}
       <section className="py-20 px-4 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
@@ -192,21 +264,20 @@ const Contact = ({ user, setUser }: ContactProps) => {
             </h2>
             <p className="text-xl text-gray-600">En çok merak edilen sorular ve detaylı cevapları</p>
           </div>
-          
-          <div className="space-y-6">
+
+          <Accordion type="single" collapsible className="w-full space-y-4">
             {faqItems.map((item, index) => (
-              <Card key={index} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
-                <CardContent className="p-8">
-                  <h3 className="font-bold text-gray-900 mb-4 flex items-center text-lg">
-                    <HelpCircle className="mr-3 h-6 w-6 text-green-600" />
-                    {item.question}
-                  </h3>
-                  <p className="text-gray-700 ml-9 leading-relaxed">{item.answer}</p>
-                </CardContent>
-              </Card>
+              <AccordionItem key={index} value={`item-${index}`} className="border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                <AccordionTrigger className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 text-lg font-medium text-gray-800">
+                  {item.question}
+                </AccordionTrigger>
+                <AccordionContent className="bg-white px-6 pb-6 text-gray-700 leading-relaxed">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
-          
+          </Accordion>
+
           <div className="text-center mt-12">
             <p className="text-gray-600 mb-4">Sorunuz burada yok mu?</p>
             <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3">

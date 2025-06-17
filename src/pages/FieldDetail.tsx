@@ -496,15 +496,6 @@ const FieldDetail = ({ user, setUser }: FieldDetailProps) => {
                           );
                         })}
                       </div>
-                      
-                      {/* Show booked slots info */}
-                      {bookedTimeSlotsForSelectedDate.length > 0 && (
-                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-sm text-red-700">
-                            <strong>Dolu saatler:</strong> {bookedTimeSlotsForSelectedDate.join(', ')}
-                          </p>
-                        </div>
-                      )}
                     </div>
                   )}
 
