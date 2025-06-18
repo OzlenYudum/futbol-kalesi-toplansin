@@ -1,7 +1,7 @@
 import { CityDistricts } from '@/types';
 
 // API Configuration - Proxy kullanarak CORS sorununu çöz
-export const API_BASE_URL = '/api';
+export const API_BASE_URL = 'https://toplansin-backend-production.up.railway.app/api';
 
 export const API_ENDPOINTS = {
   LOGIN: '/login',
