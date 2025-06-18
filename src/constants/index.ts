@@ -1,6 +1,5 @@
 import { CityDistricts } from '@/types';
 
-// API Configuration - Proxy kullanarak CORS sorununu çöz
 export const API_BASE_URL = '/api';
 
 export const API_ENDPOINTS = {
