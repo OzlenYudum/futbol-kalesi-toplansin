@@ -9,18 +9,16 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api': {
-        target: 'https://acce-46-197-154-153.ngrok-free.app',
+        target: 'http://0.0.0.0:5000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       }
     }
-
   },
   plugins: [
     react(),
-    mode === 'development' &&
-  ].filter(Boolean),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
