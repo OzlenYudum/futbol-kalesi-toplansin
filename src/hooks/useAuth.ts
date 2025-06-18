@@ -26,7 +26,7 @@ interface AuthUser {
 
 interface UseAuthReturn {
   login: (data: LoginData) => Promise<AuthUser>;
-  register: (data: RegisterData) => Promise<AuthUser>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
@@ -105,7 +105,7 @@ export const useAuth = (onAuthSuccess?: (user: AuthUser) => void): UseAuthReturn
     }
   };
 
-  const register = async (data: RegisterData): Promise<AuthUser> => {
+  const register = async (data: RegisterData): Promise<void> => {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE_URL}/register`, {
@@ -123,29 +123,22 @@ export const useAuth = (onAuthSuccess?: (user: AuthUser) => void): UseAuthReturn
       }
 
       const response = await res.json();
-      const user = response.user || response.data?.user;
-      const token = response.token || response.data?.token;
-
-      if (!user || !token) {
-        throw new Error('Kayıt işlemi başarısız. Lütfen tekrar deneyin.');
+      
+      // Backend'den success durumunu kontrol et
+      if (!response.success && response.success !== undefined) {
+        throw new Error(response.message || 'Kayıt işlemi başarısız');
       }
-
-      localStorage.setItem('token', token);
       
       // Kayıt başarılı mesajı göster
       toast({
         title: "Kayıt Başarılı!",
-        description: "Kayıt işleminiz başarılı. Hoş geldiniz!",
+        description: "Kayıt işleminiz başarıyla tamamlandı. Şimdi giriş yapabilirsiniz.",
         duration: 3000,
       });
 
-      // Callback ile parent component'e bildir
-      onAuthSuccess?.(user);
+      // Ana sayfaya yönlendirme ve login modal'ı açmak için state geç
+      navigate('/', { state: { openLoginModal: true } });
 
-      // Profil sayfasına yönlendirme
-      navigate('/profile');
-
-      return user;
     } catch (error: any) {
       toast({
         title: "Kayıt Başarısız",

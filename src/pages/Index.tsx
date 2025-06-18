@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Clock, Users, Shield, Zap, Trophy, Download, X, Smartphone, Apple, Play, ChevronRight, TrendingUp, Search, Calendar, Award, CheckCircle, ArrowRight, Heart, Share2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
@@ -24,6 +24,7 @@ const Index = ({ user, setUser }: IndexProps) => {
   const [showAppBanner, setShowAppBanner] = useState(true);
   const [email, setEmail] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   // Kullanıcı login yaptıysa Fields sayfasına yönlendir
@@ -32,6 +33,15 @@ const Index = ({ user, setUser }: IndexProps) => {
       navigate('/fields');
     }
   }, [user, navigate]);
+
+  // Register'dan geliyorsa login modal'ını aç
+  useEffect(() => {
+    if (location.state?.openLoginModal) {
+      setShowLogin(true);
+      // State'i temizle
+      navigate('/', { replace: true });
+    }
+  }, [location.state, navigate]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
