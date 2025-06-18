@@ -55,11 +55,9 @@ const ReservationDetail: React.FC<ReservationDetailProps> = ({ user, setUser }) 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
         <Header 
           user={user} 
-          setUser={setUser}
-          showLogin={showLogin}
-          setShowLogin={setShowLogin}
-          showRegister={showRegister}
-          setShowRegister={setShowRegister}
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser?.(null)}
         />
         <div className="container mx-auto px-4 py-8">
           <Alert variant="destructive">
@@ -78,11 +76,9 @@ const ReservationDetail: React.FC<ReservationDetailProps> = ({ user, setUser }) 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
         <Header 
           user={user} 
-          setUser={setUser}
-          showLogin={showLogin}
-          setShowLogin={setShowLogin}
-          showRegister={showRegister}
-          setShowRegister={setShowRegister}
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser?.(null)}
         />
         <div className="container mx-auto px-4 py-8">
           <LoadingSpinner message="Rezervasyon detayları yükleniyor..." />
@@ -96,11 +92,9 @@ const ReservationDetail: React.FC<ReservationDetailProps> = ({ user, setUser }) 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
         <Header 
           user={user} 
-          setUser={setUser}
-          showLogin={showLogin}
-          setShowLogin={setShowLogin}
-          showRegister={showRegister}
-          setShowRegister={setShowRegister}
+          onLoginClick={() => setShowLogin(true)}
+          onRegisterClick={() => setShowRegister(true)}
+          onLogout={() => setUser?.(null)}
         />
         <div className="container mx-auto px-4 py-8">
           <Alert variant="destructive">
@@ -221,11 +215,9 @@ const ReservationDetail: React.FC<ReservationDetailProps> = ({ user, setUser }) 
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       <Header 
         user={user} 
-        setUser={setUser}
-        showLogin={showLogin}
-        setShowLogin={setShowLogin}
-        showRegister={showRegister}
-        setShowRegister={setShowRegister}
+        onLoginClick={() => setShowLogin(true)}
+        onRegisterClick={() => setShowRegister(true)}
+        onLogout={() => setUser?.(null)}
       />
       
       <div className="container mx-auto px-4 py-8">
@@ -506,10 +498,10 @@ const ReservationDetail: React.FC<ReservationDetailProps> = ({ user, setUser }) 
                     </div>
                   )}
                   
-                  {reservation.haliSaha.capacity && (
+                  {reservation.haliSaha.maxPlayers && (
                     <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Kapasite:</span>
-                      <span className="font-medium">{reservation.haliSaha.capacity}</span>
+                      <span className="font-medium">{reservation.haliSaha.maxPlayers}</span>
                     </div>
                   )}
 
